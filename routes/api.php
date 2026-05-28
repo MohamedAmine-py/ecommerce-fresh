@@ -5,6 +5,7 @@ use App\Http\Controllers\API\ProduitController;
 use App\Http\Controllers\API\CategorieController;
 use App\Http\Controllers\API\CommandeController;
 use App\Http\Controllers\API\AdminController;
+use App\Http\Controllers\API\SupportChatController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -27,6 +28,9 @@ Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/products',        [ProduitController::class, 'index']);
 Route::get('/products/{id}',   [ProduitController::class, 'show']);
 Route::get('/categories',      [CategorieController::class, 'index']);
+
+// Support Chat agent route
+Route::post('/support/chat',   [SupportChatController::class, 'handleChat']);
 
 
 // ── AUTHENTICATED ROUTES ───────────────────────────────────────

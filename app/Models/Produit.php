@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
  * Produit model — represents a product in the store.
  * Belongs to one category.
  * Can appear in many order details.
+ *
+ * Hardware spec fields (nullable):
+ *   brand, processor, graphics_card, ram_details, storage_details, is_custom_build
  */
 class Produit extends Model
 {
@@ -20,6 +23,19 @@ class Produit extends Model
         'stock',
         'image',
         'categorie_id',
+        // Hardware specification columns
+        'brand',
+        'processor',
+        'graphics_card',
+        'ram_details',
+        'storage_details',
+        'is_custom_build',
+    ];
+
+    protected $casts = [
+        'is_custom_build' => 'boolean',
+        'prix'            => 'float',
+        'stock'           => 'integer',
     ];
 
     // Each product belongs to one category

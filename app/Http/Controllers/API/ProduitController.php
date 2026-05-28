@@ -11,26 +11,33 @@ use Illuminate\Http\Request;
  *
  * Public routes  : index (list), show (one product)
  * Admin routes   : store (create), update (edit), destroy (delete)
+ *
+ * Now supports hardware specification fields:
+ *   brand, processor, graphics_card, ram_details, storage_details, is_custom_build
  */
 class ProduitController extends Controller
 {
     // GET /api/products — list all products with their category
     public function index(Request $request)
     {
-        $query = Produit::with('categorie'); // with() = eager load (avoids N+1 queries)
+        $query = Produit::with('categorie');
 
         // Optional filter by category
         if ($request->has('categorie_id')) {
             $query->where('categorie_id', $request->categorie_id);
         }
 
-        // Optional search by name
+        // Optional search by name or brand
         if ($request->has('search')) {
-            $query->where('nom', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('nom', 'like', '%' . $request->search . '%')
+                  ->orWhere('brand', 'like', '%' . $request->search . '%')
+                  ->orWhere('processor', 'like', '%' . $request->search . '%')
+                  ->orWhere('graphics_card', 'like', '%' . $request->search . '%');
+            });
         }
 
-        // paginate(12) returns 12 products per page automatically
-        $produits = $query->paginate(12);
+        $produits = $query->paginate(50);
 
         return response()->json($produits);
     }
@@ -38,7 +45,6 @@ class ProduitController extends Controller
     // GET /api/products/{id} — get one product
     public function show($id)
     {
-        // with('categorie') loads the related category in the same query
         $produit = Produit::with('categorie')->find($id);
 
         if (!$produit) {
@@ -52,12 +58,19 @@ class ProduitController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom'          => 'required|string|max:200',
-            'prix'         => 'required|numeric|min:0',
-            'stock'        => 'required|integer|min:0',
-            'categorie_id' => 'required|exists:categories,id', // must be a valid category
-            'description'  => 'nullable|string',
-            'image'        => 'nullable|string',
+            'nom'             => 'required|string|max:200',
+            'prix'            => 'required|numeric|min:0',
+            'stock'           => 'required|integer|min:0',
+            'categorie_id'    => 'required|exists:categories,id',
+            'description'     => 'nullable|string',
+            'image'           => 'nullable|string',
+            // Hardware spec fields
+            'brand'           => 'nullable|string|max:100',
+            'processor'       => 'nullable|string|max:200',
+            'graphics_card'   => 'nullable|string|max:200',
+            'ram_details'     => 'nullable|string|max:200',
+            'storage_details' => 'nullable|string|max:200',
+            'is_custom_build' => 'nullable|boolean',
         ]);
 
         $produit = Produit::create($request->all());
@@ -75,10 +88,19 @@ class ProduitController extends Controller
         }
 
         $request->validate([
-            'nom'          => 'sometimes|string|max:200',
-            'prix'         => 'sometimes|numeric|min:0',
-            'stock'        => 'sometimes|integer|min:0',
-            'categorie_id' => 'sometimes|exists:categories,id',
+            'nom'             => 'sometimes|string|max:200',
+            'prix'            => 'sometimes|numeric|min:0',
+            'stock'           => 'sometimes|integer|min:0',
+            'categorie_id'    => 'sometimes|exists:categories,id',
+            'description'     => 'nullable|string',
+            'image'           => 'nullable|string',
+            // Hardware spec fields
+            'brand'           => 'nullable|string|max:100',
+            'processor'       => 'nullable|string|max:200',
+            'graphics_card'   => 'nullable|string|max:200',
+            'ram_details'     => 'nullable|string|max:200',
+            'storage_details' => 'nullable|string|max:200',
+            'is_custom_build' => 'nullable|boolean',
         ]);
 
         $produit->update($request->all());

@@ -25,3 +25,5 @@ export const deleteOrder = (id, token) => apiCall("DELETE", `/orders/${id}`, nul
 export const createCategory = (data, token) => apiCall("POST", "/categories", data, token);
 export const updateCategory = (id, data, token) => apiCall("PUT", `/categories/${id}`, data, token);
 export const deleteCategory = (id, token) => apiCall("DELETE", `/categories/${id}`, null, token);
+export const sendSupportMessage = (message, history) => apiCall("POST", "/support/chat", { message, history });
+
