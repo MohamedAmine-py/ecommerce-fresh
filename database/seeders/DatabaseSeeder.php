@@ -41,21 +41,21 @@ class DatabaseSeeder extends Seeder
                 'nom' => 'Slayer-X Gaming Desktop', 'prix' => 4299.99, 'stock' => 5, 'categorie_id' => $gamerPcs->id, 
                 'description' => 'The ultimate 4K gaming machine built for uncompromising performance.', 
                 'image' => 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=800&h=800&fit=crop',
-                'brand' => 'Next Level PC', 'processor' => 'Intel Core i9-14900K', 'graphics_card' => 'NVIDIA RTX 4090 24GB',
+                'brand' => 'Elite PC', 'processor' => 'Intel Core i9-14900K', 'graphics_card' => 'NVIDIA RTX 4090 24GB',
                 'ram_details' => '32GB DDR5-6000 Corsair Dominator', 'storage_details' => '2TB Samsung 990 Pro NVMe SSD', 'is_custom_build' => true
             ],
             [
                 'nom' => 'Phantom-Z System', 'prix' => 2899.99, 'stock' => 10, 'categorie_id' => $gamerPcs->id, 
                 'description' => 'Exceptional 1440p and 4K performance with full AMD synergy.', 
-                'image' => 'https://images.unsplash.com/photo-1605648812678-8311a2f9cb24?w=800&h=800&fit=crop',
-                'brand' => 'Next Level PC', 'processor' => 'AMD Ryzen 9 7950X', 'graphics_card' => 'AMD Radeon RX 7900 XTX 24GB',
+                'image' => 'https://images.unsplash.com/photo-1624701928517-44c8ac49d93c?w=800&h=800&fit=crop',
+                'brand' => 'Elite PC', 'processor' => 'AMD Ryzen 9 7950X', 'graphics_card' => 'AMD Radeon RX 7900 XTX 24GB',
                 'ram_details' => '32GB DDR5-6000 G.Skill Trident Z5', 'storage_details' => '2TB WD Black SN850X', 'is_custom_build' => true
             ],
             [
                 'nom' => 'Nova Strike eSports Build', 'prix' => 1499.99, 'stock' => 15, 'categorie_id' => $gamerPcs->id, 
                 'description' => 'High-framerate 1080p/1440p gaming optimized for competitive titles.', 
-                'image' => 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&h=800&fit=crop',
-                'brand' => 'Next Level PC', 'processor' => 'Intel Core i5-13600K', 'graphics_card' => 'NVIDIA RTX 4070 12GB',
+                'image' => 'https://images.unsplash.com/photo-1603481588273-2f908a9a7a1b?w=800&h=800&fit=crop',
+                'brand' => 'Elite PC', 'processor' => 'Intel Core i5-13600K', 'graphics_card' => 'NVIDIA RTX 4070 12GB',
                 'ram_details' => '16GB DDR5-5600 Corsair Vengeance', 'storage_details' => '1TB Crucial P5 Plus NVMe', 'is_custom_build' => true
             ],
 
@@ -63,15 +63,15 @@ class DatabaseSeeder extends Seeder
             [
                 'nom' => 'TitanWS Pro Studio', 'prix' => 6999.99, 'stock' => 2, 'categorie_id' => $workstations->id, 
                 'description' => 'Unrivaled rendering and AI workload performance.', 
-                'image' => 'https://images.unsplash.com/photo-1547394765-185e1e68f34e?w=800&h=800&fit=crop',
-                'brand' => 'Next Level Pro', 'processor' => 'Intel Xeon w9-3495X', 'graphics_card' => 'NVIDIA RTX 6000 Ada Generation',
+                'image' => 'https://images.unsplash.com/photo-1547082299-de196ea013d6?w=800&h=800&fit=crop',
+                'brand' => 'Elite Pro', 'processor' => 'Intel Xeon w9-3495X', 'graphics_card' => 'NVIDIA RTX 6000 Ada Generation',
                 'ram_details' => '128GB DDR5 ECC Registered', 'storage_details' => '4TB Gen5 NVMe Array', 'is_custom_build' => true
             ],
             [
                 'nom' => 'Creator-7 Master', 'prix' => 3499.99, 'stock' => 4, 'categorie_id' => $workstations->id, 
                 'description' => 'Perfect for 3D modeling, video editing, and complex simulations.', 
-                'image' => 'https://images.unsplash.com/photo-1626218174358-7769486c4b79?w=800&h=800&fit=crop',
-                'brand' => 'Next Level Pro', 'processor' => 'AMD Ryzen Threadripper 7970X', 'graphics_card' => 'NVIDIA RTX 4080 SUPER 16GB',
+                'image' => 'https://images.unsplash.com/photo-1598986646512-93e5db240d7d?w=800&h=800&fit=crop',
+                'brand' => 'Elite Pro', 'processor' => 'AMD Ryzen Threadripper 7970X', 'graphics_card' => 'NVIDIA RTX 4080 SUPER 16GB',
                 'ram_details' => '64GB DDR5-5200 Pro', 'storage_details' => '2TB Gen4 NVMe SSD', 'is_custom_build' => true
             ],
 
@@ -97,13 +97,13 @@ class DatabaseSeeder extends Seeder
             [
                 'nom' => 'Samsung 990 PRO 2TB NVMe SSD', 'prix' => 169.99, 'stock' => 30, 'categorie_id' => $components->id, 
                 'description' => 'PCIe 4.0 NVMe with up to 7450 MB/s read and 6900 MB/s write.', 
-                'image' => 'https://images.unsplash.com/photo-1628557044797-f21a177c37ec?w=800&h=800&fit=crop',
+                'image' => 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=800&h=800&fit=crop',
                 'brand' => 'Samsung', 'processor' => null, 'graphics_card' => null, 'ram_details' => null, 'storage_details' => '2TB PCIe Gen4 NVMe', 'is_custom_build' => false
             ],
             [
                 'nom' => 'ASUS ROG Crosshair X670E Hero', 'prix' => 699.99, 'stock' => 8, 'categorie_id' => $components->id, 
                 'description' => 'Premium AM5 motherboard with robust power delivery and PCIe 5.0.', 
-                'image' => 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=800&fit=crop',
+                'image' => 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=800&h=800&fit=crop',
                 'brand' => 'ASUS ROG', 'processor' => null, 'graphics_card' => null, 'ram_details' => null, 'storage_details' => null, 'is_custom_build' => false
             ],
 
@@ -117,13 +117,13 @@ class DatabaseSeeder extends Seeder
             [
                 'nom' => 'SteelSeries Arctis Nova Pro Wireless', 'prix' => 349.99, 'stock' => 12, 'categorie_id' => $peripherals->id, 
                 'description' => 'Premium gaming headset with Active Noise Cancellation and hot-swappable batteries.', 
-                'image' => 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&h=800&fit=crop',
+                'image' => 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&h=800&fit=crop',
                 'brand' => 'SteelSeries', 'processor' => null, 'graphics_card' => null, 'ram_details' => null, 'storage_details' => null, 'is_custom_build' => false
             ],
             [
                 'nom' => 'Wooting 60HE+ Analog Keyboard', 'prix' => 174.99, 'stock' => 5, 'categorie_id' => $peripherals->id, 
                 'description' => 'Analog mechanical keyboard with Rapid Trigger for competitive edge.', 
-                'image' => 'https://images.unsplash.com/photo-1595225476474-87563907a212?w=800&h=800&fit=crop',
+                'image' => 'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?w=800&h=800&fit=crop',
                 'brand' => 'Wooting', 'processor' => null, 'graphics_card' => null, 'ram_details' => null, 'storage_details' => null, 'is_custom_build' => false
             ],
 

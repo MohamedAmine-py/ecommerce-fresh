@@ -10,8 +10,13 @@ export function AppProvider({ children }) {
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem("cart") || "[]"));
   const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem("favorites") || "[]"));
   
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
+  const [darkMode, setDarkMode] = useState(() => {
+    const stored = localStorage.getItem("theme");
+    return stored ? stored === "dark" : true; // Default to dark mode
+  });
 
+  const [search, setSearch] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -105,7 +110,8 @@ export function AppProvider({ children }) {
       cartOpen, setCartOpen, authOpen, setAuthOpen, toasts, toast,
       handleLogin, handleLogout,
       addToCart, updateCartItem, removeFromCart, clearCart,
-      darkMode, setDarkMode, favorites, toggleFavorite
+      darkMode, setDarkMode, favorites, toggleFavorite,
+      search, setSearch, selectedProduct, setSelectedProduct
     }}>
       {children}
     </AppContext.Provider>

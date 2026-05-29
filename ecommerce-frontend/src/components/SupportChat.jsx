@@ -28,7 +28,7 @@ export default function SupportChat() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "👋 Hello! I'm the **NextLevel Configurator**, your expert PC builder and technical advisor. I'm here to help you build the ultimate gaming or workstation rig.\n\n- **Custom PC Builds** — recommendations for Gamer PCs and Workstations\n- **Hardware Compatibility** — check if your CPU, GPU, and motherboard match\n- **Performance Estimates** — framerates and rendering bottlenecks\n- **Peripherals & Accessories** — high-performance mice, keyboards, and cooling\n\nHow can I help you level up today?"
+      content: "👋 Hello! I'm the **Elite PC Assistant**, your expert PC builder and technical advisor. I'm here to help you build the ultimate gaming or workstation rig.\n\n- **Custom PC Builds** — recommendations for Gamer PCs and Workstations\n- **Hardware Compatibility** — check if your CPU, GPU, and motherboard match\n- **Performance Estimates** — framerates and rendering bottlenecks\n- **Peripherals & Accessories** — high-performance mice, keyboards, and cooling\n\nHow can I help you build your dream setup today?"
     }
   ]);
   const [input, setInput] = useState("");
@@ -158,7 +158,7 @@ export default function SupportChat() {
         <button 
           className="support-chat-launcher" 
           onClick={() => setIsOpen(true)}
-          title="Next Level PC Support"
+          title="Elite PC Support"
           aria-label="Open 24/7 support chat"
         >
           <IconChatBubble />
@@ -173,11 +173,11 @@ export default function SupportChat() {
           <div className="support-chat-header">
             <div className="support-chat-agent-info">
               <div className="support-chat-avatar">
-                N
+                E
                 <span className="support-chat-avatar-status" />
               </div>
               <div className="support-chat-agent-meta">
-                <span className="support-chat-agent-name">NextLevel Configurator</span>
+                <span className="support-chat-agent-name">Elite PC Assistant</span>
                 <span className="support-chat-agent-role">Expert PC Builder • 24/7</span>
               </div>
             </div>

@@ -1,10 +1,31 @@
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
-import MainPage from "./pages/MainPage";
+import Layout from "./components/Layout";
+import Home from "./pages/Home";
+import Products from "./pages/Products";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Favorites from "./pages/Favorites";
+import Orders from "./pages/Orders";
+import Admin from "./pages/Admin";
 
 export default function App() {
   return (
     <AppProvider>
-      <MainPage />
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/admin" element={<Admin />} />
+          </Routes>
+        </Layout>
+      </Router>
     </AppProvider>
   );
 }

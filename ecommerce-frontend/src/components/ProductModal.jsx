@@ -35,7 +35,7 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
     { label: "Brand", value: product.brand },
     { label: "Category", value: product.categorie?.nom || "Hardware" },
     { label: "Availability", value: isOut ? "Out of Stock" : `${product.stock} Units Available` },
-    { label: "Warranty", value: "3 Years Next Level Care" }
+    { label: "Warranty", value: "3 Years Elite PC Care" }
   ].filter(s => s.value);
 
   return (
@@ -86,11 +86,11 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
             {product.description || "High-performance PC hardware component."}
           </p>
 
-          <div style={{ background: "#1e293b", borderRadius: 12, border: "1px solid #334155", overflow: "hidden", marginBottom: 28, flexGrow: 1 }}>
+          <div style={{ background: "#1e293b", borderRadius: 12, border: "1px solid #334155", overflow: "hidden", marginBottom: 28 }}>
             <div style={{ padding: "12px 16px", background: "#0f172a", borderBottom: "1px solid #334155", fontSize: 12, fontWeight: 700, color: "#cbd5e1", textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Technical Specifications
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", padding: "8px 0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", padding: "8px 0", maxHeight: "200px", overflowY: "auto" }}>
               {specs.map((item, i) => (
                 <div key={item.label} style={{ display: "grid", gridTemplateColumns: "140px 1fr", padding: "8px 16px", borderBottom: i < specs.length - 1 ? "1px solid #334155" : "none" }}>
                   <div style={{ fontSize: 13, color: "#94a3b8", fontWeight: 600 }}>{item.label}</div>
