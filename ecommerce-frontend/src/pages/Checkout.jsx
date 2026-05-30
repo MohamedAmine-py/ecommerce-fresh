@@ -3,7 +3,7 @@ import { useApp } from "../context/AppContext";
 import { createOrder } from "../api/client";
 
 export default function Checkout() {
-  const { cart, user, token, toast, setCart, setCartOpen } = useApp();
+  const { cart, user, token, toast, clearCart, setCartOpen } = useApp();
   const [step, setStep] = useState(1); // 1: Review, 2: Shipping, 3: Payment, 4: Confirmation
   const [loading, setLoading] = useState(false);
 
@@ -88,7 +88,7 @@ export default function Checkout() {
 
       if (response.id) {
         toast("Order placed successfully!", "success");
-        setCart([]);
+        clearCart();
         setStep(4);
       } else {
         toast(response.message || "Failed to place order", "error");
