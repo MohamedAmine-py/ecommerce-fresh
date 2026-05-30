@@ -22,6 +22,21 @@ export const createUser = (data, token) => apiCall("POST", "/admin/users", data,
 export const updateUser = (id, data, token) => apiCall("PUT", `/admin/users/${id}`, data, token);
 export const deleteUser = (id, token) => apiCall("DELETE", `/admin/users/${id}`, null, token);
 export const deleteOrder = (id, token) => apiCall("DELETE", `/orders/${id}`, null, token);
+export const downloadInvoice = async (id, token) => {
+  const headers = { Accept: "application/pdf" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${BASE}/orders/${id}/invoice`, { headers });
+  if (!res.ok) throw new Error("Failed to download invoice");
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Invoice-${id}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+};
 export const createCategory = (data, token) => apiCall("POST", "/categories", data, token);
 export const updateCategory = (id, data, token) => apiCall("PUT", `/categories/${id}`, data, token);
 export const deleteCategory = (id, token) => apiCall("DELETE", `/categories/${id}`, null, token);

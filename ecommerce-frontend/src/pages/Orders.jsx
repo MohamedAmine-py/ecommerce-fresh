@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getOrders } from "../api/client";
+import { getOrders, downloadInvoice } from "../api/client";
 import { useApp } from "../context/AppContext";
 
 export default function Orders() {
-  const { user, token, setAuthOpen } = useApp();
+  const { user, token, setAuthOpen, toast } = useApp();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     if (token) {
@@ -23,6 +24,18 @@ export default function Orders() {
       setLoading(false);
     }
   }, [token]);
+
+  const handleDownloadInvoice = async (orderId) => {
+    setDownloadingId(orderId);
+    try {
+      await downloadInvoice(orderId, token);
+      toast("Invoice downloaded successfully!", "success");
+    } catch (error) {
+      toast("Failed to download invoice", "error");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   if (!user) {
     return (
@@ -83,7 +96,7 @@ export default function Orders() {
             >
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 3, color: "var(--text)" }}>
-                  Commande #{o.id}
+                  Commande #{String(o.id).padStart(6, "0")}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text3)", fontFamily: "JetBrains Mono,monospace" }}>
                   {new Date(o.created_at).toLocaleDateString("fr-FR", {
@@ -106,6 +119,47 @@ export default function Orders() {
                 </div>
               </div>
             </div>
+
+            {/* Delivery Info */}
+            {o.delivery_address && (
+              <div style={{ background: "var(--bg3)", padding: 16, borderRadius: 8, marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text2)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  Delivery Information
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, fontSize: 13, color: "var(--text)" }}>
+                  <div>
+                    <div style={{ color: "var(--text2)", fontSize: 11, fontWeight: 600, marginBottom: 4 }}>ADDRESS</div>
+                    <div style={{ fontWeight: 500 }}>{o.delivery_address}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: "var(--text2)", fontSize: 11, fontWeight: 600, marginBottom: 4 }}>PHONE</div>
+                    <div style={{ fontWeight: 500 }}>{o.delivery_phone}</div>
+                  </div>
+                  {o.estimated_delivery_date && (
+                    <div>
+                      <div style={{ color: "var(--text2)", fontSize: 11, fontWeight: 600, marginBottom: 4 }}>ESTIMATED DELIVERY</div>
+                      <div style={{ fontWeight: 500, color: "var(--accent)" }}>
+                        {new Date(o.estimated_delivery_date).toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {o.payment_method && (
+                    <div>
+                      <div style={{ color: "var(--text2)", fontSize: 11, fontWeight: 600, marginBottom: 4 }}>PAYMENT METHOD</div>
+                      <div style={{ fontWeight: 500, textTransform: "capitalize" }}>
+                        {o.payment_method.replace(/_/g, " ")}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <table>
               <thead>
                 <tr>
@@ -139,6 +193,31 @@ export default function Orders() {
                 ))}
               </tbody>
             </table>
+
+            {/* Action Buttons */}
+            <div style={{ marginTop: 16, display: "flex", gap: 12 }}>
+              <button
+                onClick={() => handleDownloadInvoice(o.id)}
+                disabled={downloadingId === o.id}
+                style={{
+                  flex: 1,
+                  background: "var(--accent)",
+                  color: "#0f172a",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 16px",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: downloadingId === o.id ? "default" : "pointer",
+                  opacity: downloadingId === o.id ? 0.6 : 1,
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => !downloadingId && (e.target.style.background = "var(--accent-light)")}
+                onMouseLeave={(e) => !downloadingId && (e.target.style.background = "var(--accent)")}
+              >
+                {downloadingId === o.id ? "Downloading..." : "📥 Download Invoice"}
+              </button>
+            </div>
           </div>
         ))
       )}

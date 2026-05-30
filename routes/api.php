@@ -42,9 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user',    [AuthController::class, 'me']);
 
     // Orders — clients can place and view their own orders
-    Route::get('/orders',       [CommandeController::class, 'index']);
-    Route::post('/orders',      [CommandeController::class, 'store']);
-    Route::get('/orders/{id}',  [CommandeController::class, 'show']);
+    Route::get('/orders',                [CommandeController::class, 'index']);
+    Route::post('/orders',               [CommandeController::class, 'store']);
+    Route::get('/orders/{id}',           [CommandeController::class, 'show']);
+    Route::get('/orders/{id}/invoice',   [CommandeController::class, 'downloadInvoice']);
 
 
     // ── ADMIN ONLY ROUTES ──────────────────────────────────────

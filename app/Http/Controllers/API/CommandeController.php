@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Commande;
 use App\Models\Produit;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /*
  * CommandeController — handles orders.
@@ -56,13 +57,16 @@ class CommandeController extends Controller
     }
 
     // POST /api/orders — place an order
-    // Expected body: { "items": [{ "produit_id": 1, "quantite": 2 }, ...] }
+    // Expected body: { "items": [...], "payment_method": "credit_card", "delivery_address": "...", "delivery_phone": "..." }
     public function store(Request $request)
     {
         $request->validate([
             'items'                => 'required|array|min:1',
             'items.*.produit_id'   => 'required|exists:produits,id',
             'items.*.quantite'     => 'required|integer|min:1',
+            'payment_method'       => 'required|in:credit_card,paypal,cash_on_delivery',
+            'delivery_address'     => 'required|string|min:10',
+            'delivery_phone'       => 'required|string|min:8',
         ]);
 
         $total = 0;
@@ -88,11 +92,18 @@ class CommandeController extends Controller
             ];
         }
 
+        // Calculate estimated delivery date (current date + 3 business days)
+        $deliveryDate = $this->calculateDeliveryDate();
+
         // Step 2: create the order
         $commande = Commande::create([
-            'user_id' => $request->user()->id,
-            'statut'  => 'en_cours',
-            'total'   => $total,
+            'user_id'                   => $request->user()->id,
+            'statut'                    => 'en_cours',
+            'total'                     => $total,
+            'payment_method'            => $request->payment_method,
+            'delivery_address'          => $request->delivery_address,
+            'delivery_phone'            => $request->delivery_phone,
+            'estimated_delivery_date'   => $deliveryDate,
         ]);
 
         // Step 3: create detail lines and deduct stock
@@ -111,6 +122,23 @@ class CommandeController extends Controller
             $commande->load('details.produit'),
             201
         );
+    }
+
+    // Helper function to calculate delivery date (3 business days)
+    private function calculateDeliveryDate()
+    {
+        $date = now();
+        $businessDays = 0;
+
+        while ($businessDays < 3) {
+            $date->addDay();
+            // 0 = Sunday, 6 = Saturday
+            if ($date->dayOfWeek !== 0 && $date->dayOfWeek !== 6) {
+                $businessDays++;
+            }
+        }
+
+        return $date->toDateString();
     }
 
     // PATCH /api/orders/{id}/status — admin only
@@ -149,5 +177,30 @@ class CommandeController extends Controller
         $commande->delete();
 
         return response()->json(['message' => 'Commande supprimée']);
+    }
+
+    // GET /api/orders/{id}/invoice — download invoice as PDF
+    public function downloadInvoice(Request $request, $id)
+    {
+        $user = $request->user();
+        $commande = Commande::with(['details.produit', 'user'])->find($id);
+
+        if (!$commande) {
+            return response()->json(['message' => 'Commande non trouvée'], 404);
+        }
+
+        // Client can only download their own invoices
+        if ($user->role !== 'admin' && $commande->user_id !== $user->id) {
+            return response()->json(['message' => 'Non autorisé'], 403);
+        }
+
+        // Generate PDF
+        $pdf = Pdf::loadView('invoices.invoice', [
+            'commande' => $commande,
+            'company_name' => 'Elite PC',
+            'company_logo' => asset('images/logo.png'),
+        ]);
+
+        return $pdf->download("Invoice-{$commande->id}.pdf");
     }
 }

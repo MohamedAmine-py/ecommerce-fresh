@@ -17,6 +17,10 @@ class Commande extends Model
         'user_id',
         'statut',
         'total',
+        'payment_method',
+        'delivery_address',
+        'delivery_phone',
+        'estimated_delivery_date',
     ];
 
     // The customer who placed this order

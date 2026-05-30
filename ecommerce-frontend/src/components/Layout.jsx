@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import SupportChat from "./SupportChat";
 import ProductModal, { getProductImage } from "./ProductModal";
-import { login as apiLogin, register as apiRegister, createOrder } from "../api/client";
+import { login as apiLogin, register as apiRegister } from "../api/client";
 
 // Icon Cart for Drawer Empty View
 const IconCart = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>;
@@ -40,7 +40,6 @@ export default function Layout({ children }) {
   const [authForm, setAuthForm] = useState({ nom: "", email: "", mot_de_passe: "" });
   const [authErr, setAuthErr] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   async function handleAuthSubmit() {
     setAuthErr("");
@@ -68,25 +67,9 @@ export default function Layout({ children }) {
       setAuthOpen(true);
       return;
     }
-    setCheckoutLoading(true);
-    try {
-      const data = await createOrder(
-        { items: cart.map((i) => ({ produit_id: i.id, quantite: i.quantite })) },
-        token
-      );
-      setCheckoutLoading(false);
-      if (data.id) {
-        clearCart();
-        setCartOpen(false);
-        toast(`Commande #${data.id} passée !`);
-        navigate("/orders");
-      } else {
-        toast(data.message || "Erreur lors de la validation", "error");
-      }
-    } catch (e) {
-      setCheckoutLoading(false);
-      toast("Une erreur est survenue lors de la commande.", "error");
-    }
+    // Navigate to checkout page instead of placing order directly
+    setCartOpen(false);
+    navigate("/checkout");
   }
 
   return (
@@ -175,13 +158,10 @@ export default function Layout({ children }) {
                 <button
                   className="checkout-btn"
                   onClick={handleCheckout}
-                  disabled={checkoutLoading}
                 >
-                  {checkoutLoading
-                    ? "Traitement..."
-                    : user
-                    ? "Confirmer la commande"
-                    : "Se connecter pour commander"}
+                  {user
+                    ? "Proceed to Checkout"
+                    : "Sign in to Order"}
                 </button>
               </div>
             )}
