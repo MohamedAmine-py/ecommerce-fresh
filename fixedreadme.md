@@ -149,7 +149,6 @@ Secure admin dashboard provides platform oversight:
 - **Product Inventory** – CRUD operations for hardware catalog
 - **User Management** – Admin controls for user creation, modification, deletion
 - **Order Monitoring** – View all customer orders regardless of status
-- **Support Integration** – Access to customer support chat history
 
 **Authentication:** All admin routes require both `auth:sanctum` middleware AND `admin` role verification.
 
@@ -163,7 +162,7 @@ Secure admin dashboard provides platform oversight:
 
 ### 6. AI-Powered Support Chat
 
-Google Gemini integration enables intelligent customer support:
+The Elite PC Assistant utilizes the Google Gemini Flash-Lite model via a dedicated SupportChatController to provide real-time, context-aware hardware guidance and technical support.
 - Real-time chat interface within platform
 - Context-aware responses to product questions
 - Order status inquiries
@@ -269,7 +268,7 @@ POST   /api/login                 – Authenticate and receive token
 GET    /api/products              – List all products (paginated)
 GET    /api/products/{id}         – Get product details
 GET    /api/categories            – List all categories
-POST   /api/support/chat          – Send message to AI support chat
+POST   /api/support/chat          – Send message to AI support chat/Elite PC Assist(Gemini Flash-Lite)
 ```
 
 ### Authenticated Endpoints (auth:sanctum)
@@ -397,18 +396,13 @@ php artisan migrate:fresh --seed
 
 ## Deployment Considerations
 
-### Production Checklist
+## Execution Environment
 
-- [ ] Set `APP_ENV=production` in `.env`
-- [ ] Set `APP_DEBUG=false` in `.env`
-- [ ] Generate strong `APP_KEY` via `php artisan key:generate`
-- [ ] Configure `MAIL_*` variables for email notifications
-- [ ] Set up database backups and monitoring
-- [ ] Enable HTTPS/SSL certificates
-- [ ] Configure CORS appropriately (`APP_URL` must match frontend domain)
-- [ ] Build frontend: `npm run build` → generates `dist/` folder
-- [ ] Serve frontend via web server (Nginx/Apache) or CDN
-- [ ] Run migrations on production: `php artisan migrate --force`
+### Local Development Focus
+The platform is fully optimized for execution and evaluation within a local development environment. 
+- **Backend API:** Orchestrated via Laravel's built-in web server running locally on `http://127.0.0.1:8000`.
+- **Frontend UI:** Served locally via Vite's development server on `http://localhost:5173`.
+- **Database Engine:** Managed via a local MySQL instance with environment credentials securely stored in the local `.env` file.
 
 ### Environment Variables (Critical)
 
@@ -436,26 +430,6 @@ PAYPAL_CLIENT_ID=...
 
 ---
 
-## Testing
-
-### Backend Testing
-
-```bash
-# Run Laravel tests
-php artisan test
-
-# Run with coverage
-php artisan test --coverage
-```
-
-### Frontend Testing (Optional)
-
-```bash
-cd ecommerce-frontend
-npm run test
-```
-
----
 
 ## Troubleshooting
 
@@ -475,19 +449,6 @@ npm run test
 
 **Issue:** Orders not displaying delivery date
 - **Solution:** Run migration: `php artisan migrate:fresh --seed`
-
----
-
-## Roadmap & Future Enhancements
-
-- **Payment Gateway Integration:** Stripe, PayPal, and Mollie payment processors
-- **Email Notifications:** Order confirmations, shipping updates, promotional newsletters
-- **Advanced Analytics:** Customer lifetime value, product performance metrics, conversion funnels
-- **Inventory Management:** Low-stock alerts, automated reordering, warehouse integration
-- **Customer Reviews:** Product ratings, verified purchase badges, community feedback
-- **Live Chat:** Real-time support agents (upgrade from AI-only)
-- **Mobile App:** React Native frontend for iOS/Android
-- **Multi-Language:** i18n support for global markets
 
 ---
 

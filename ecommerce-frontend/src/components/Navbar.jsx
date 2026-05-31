@@ -20,9 +20,15 @@ export default function Navbar() {
 
   return (
     <nav className="nav">
-      <Link to="/" className="nav-logo">
-        <span>Elite</span><span className="nav-logo-accent">PC</span>
+      {/* BRAND LOGO REPLACED HERE */}
+      <Link to="/" className="nav-logo" style={{ display: "flex", alignItems: "center" }}>
+        <img 
+          src="/pc_logo.png" 
+          alt="Elite PC Logo" 
+          style={{ height: "36px", width: "auto", objectContain: "contain" }} 
+        />
       </Link>
+
       <div className="nav-links">
         <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} end>Boutique</NavLink>
         <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>Produits</NavLink>
