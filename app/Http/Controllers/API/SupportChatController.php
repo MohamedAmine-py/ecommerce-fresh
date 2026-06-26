@@ -3,81 +3,134 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\SupportChatRequest;
+use App\Services\GeminiRagService;
 use Gemini\Laravel\Facades\Gemini;
 use Gemini\Data\Content;
 use Gemini\Enums\Role;
 use Exception;
-use Log;
+use Illuminate\Support\Facades\Log;
 
+/**
+ * SupportChatController — AI-powered customer support for Elite PC.
+ *
+ * Architecture:
+ * 1. Incoming user message is validated & sanitized by SupportChatRequest.
+ * 2. GeminiRagService fetches the live product catalog from the database
+ *    and builds a context-enriched system prompt (RAG pattern).
+ * 3. The Gemini Flash-Lite model generates a response grounded in real data.
+ * 4. Rate limiting is enforced at the route level (throttle:ai-chat).
+ */
 class SupportChatController extends Controller
 {
     /**
+     * Inject the RAG service via constructor dependency injection.
+     */
+    public function __construct(
+        private readonly GeminiRagService $ragService
+    ) {}
+
+    /**
      * Handle support chat agent requests and integrate with Google Gemini API.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * The RAG pipeline:
+     *   1. RETRIEVE  → Fetch live product catalog from MySQL/SQLite via Eloquent.
+     *   2. AUGMENT   → Inject the catalog into the system prompt alongside grounding rules.
+     *   3. GENERATE  → Send the enriched prompt + user message to Gemini Flash-Lite.
+     *
+     * @param  SupportChatRequest  $request  Validated & sanitized request.
      * @return \Illuminate\Http\JsonResponse
      */
-    public function handleChat(Request $request)
+    public function handleChat(SupportChatRequest $request)
     {
-        $request->validate([
-            'message' => 'required|string|max:2000',
-            'history' => 'nullable|array',
-            'history.*.role' => 'required|string|in:user,model,assistant',
-            'history.*.content' => 'required|string',
-        ]);
-
-        $message = $request->input('message');
+        $message      = $request->input('message');
         $historyInput = $request->input('history', []);
 
-        // Reconstruct history using Gemini-native Content structures
+        // ── Step 1: Reconstruct conversation history ────────────────
+        // Map frontend roles to Gemini-native Content structures
         $history = [];
         foreach ($historyInput as $msg) {
-            // Map either 'model' or 'assistant' to Role::MODEL
-            $role = ($msg['role'] === 'model' || $msg['role'] === 'assistant') ? Role::MODEL : Role::USER;
+            $role = ($msg['role'] === 'model' || $msg['role'] === 'assistant')
+                ? Role::MODEL
+                : Role::USER;
             $history[] = Content::parse(part: $msg['content'], role: $role);
         }
 
-        // Define Elite PC Assistant's system instruction
-        $systemInstruction = "You are 'Elite PC Assistant', an expert PC builder, hardware advisor, and 24/7 technical support agent for 'Elite PC', a premium storefront specializing in custom gamer PCs, high-end workstations, PC components, and gaming peripherals.\n\n"
-            . "Your tone must be professional, highly technical, enthusiastic about PC gaming/hardware, and helpful. You are an expert in modern PC architectures (Intel Core 13th/14th Gen, AMD Ryzen 7000 series, NVIDIA RTX 40-series, AMD Radeon RX 7000 series, DDR5 RAM, NVMe Gen4/Gen5, etc.).\n\n"
-            . "Provide assistance regarding:\n"
-            . "- Custom PC builds and pre-built recommendations (Gamer PCs and Workstations)\n"
-            . "- Hardware compatibility (e.g., 'Will this RTX 4090 fit in this NZXT case?', 'Is this DDR5 RAM compatible with this AM5 motherboard?')\n"
-            . "- Performance estimates and bottlenecks for specific games or professional workloads (rendering, 3D modeling, video editing)\n"
-            . "- Peripheral advice (high polling rate mice, mechanical keyboards, gaming headsets)\n"
-            . "- Order tracking, shipping estimates, and return & warranty policies\n\n"
-            . "**CRITICAL INSTRUCTION:** When a customer asks about a product, you MUST use the provided product data in the conversation history (which includes fields like `processor`, `graphics_card`, `ram_details`, `storage_details`, `brand`) to answer accurately. Never invent specs. If a product lacks specs, assume it is a peripheral or accessory.\n\n"
-            . "**Important boundaries:** This store specializes strictly in high-end PC hardware and gaming. If a customer asks about unrelated items (like appliances, clothes, console exclusives, or general smartphones not related to PC gaming), politely inform them that 'Elite PC' focuses exclusively on the ultimate PC gaming and workstation experience.\n\n"
-            . "Keep responses clear, well-formatted in Markdown (use bullet points or bold text for hardware names), and concise. Never display raw JSON or code. Be precise, technical, and reassuring.";
+        // ── Step 2: Build RAG-enriched system prompt ────────────────
+        // Fetch live product catalog from the database
+        $catalogContext = $this->ragService->buildProductCatalogContext();
+
+        // Construct the full system instruction with grounding rules + catalog data
+        $systemInstruction = $this->ragService->buildSystemPrompt($catalogContext);
+
+        // ── Security: Verify API key via config() (not env()) ────
+        if (empty(config('gemini.api_key'))) {
+            Log::error('Gemini API key is not configured in the server environment.');
+            return response()->json([
+                'status' => 'error',
+                'reply'  => "Hello! I am currently experiencing a minor technical delay. "
+                          . "Please give me a brief moment, or let me know how I can help "
+                          . "once my systems are fully back online! (Elite PC Assistant offline)",
+                'error'  => 'Gemini API key is not configured.'
+            ], 200);
+        }
+
+        // ── Step 3: Generate AI response with robust fallback chain ──
+        // Multi-model fallback chain to ensure high availability during API rate-limiting or high-demand spikes
+        $models = [
+            'gemini-2.5-flash-lite',     // Preferred Flash-Lite
+            'gemini-flash-lite-latest',  // Stable Flash-Lite Alias
+            'gemini-2.5-flash',          // Stable High-Capacity Flash
+            'gemini-flash-latest'        // Stable High-Capacity Flash Alias
+        ];
+
+        $reply = null;
+        $lastException = null;
+
+        foreach ($models as $model) {
+            try {
+                $chat = Gemini::generativeModel(model: $model)
+                    ->withSystemInstruction(Content::parse($systemInstruction))
+                    ->startChat(history: $history);
+
+                $response = $chat->sendMessage($message);
+                $reply    = $response->text();
+
+                if (!empty($reply)) {
+                    Log::info("SupportChatController: AI chat succeeded using model '{$model}'.");
+                    break;
+                }
+            } catch (Exception $e) {
+                $lastException = $e;
+                Log::warning("SupportChatController: Model '{$model}' failed: " . $e->getMessage() . ". Attempting next fallback model...");
+            }
+        }
 
         try {
-            // Ensure API key is configured
-            if (!env('GEMINI_API_KEY')) {
-                throw new Exception("Gemini API key is not configured in the backend environment.");
+            if (empty($reply)) {
+                throw $lastException ?? new Exception('All models in the Gemini fallback chain failed to generate content.');
             }
-
-            // Initialize the gemini-2.5-flash-lite model with system instruction and history
-            $chat = Gemini::generativeModel(model: 'gemini-2.5-flash-lite')
-                ->withSystemInstruction(Content::parse($systemInstruction))
-                ->startChat(history: $history);
-
-            $response = $chat->sendMessage($message);
-            $reply = $response->text();
 
             return response()->json([
                 'status' => 'success',
-                'reply' => $reply,
+                'reply'  => $reply,
             ]);
-        } catch (Exception $e) {
-            Log::error("Gemini Support Chat Error: " . $e->getMessage());
 
-            // Provide a polite, warm, on-brand fallback message in case of API failure or missing keys
+        } catch (Exception $e) {
+            Log::error('Gemini Support Chat Error: ' . $e->getMessage(), [
+                'user_message' => $message,
+                'trace'        => $e->getTraceAsString(),
+            ]);
+
+            // Return a friendly, on-brand fallback message
+            // Use 200 so the frontend can display the fallback instead of crashing
             return response()->json([
                 'status' => 'error',
-                'reply' => "Hello! I am currently experiencing a minor technical delay. Please give me a brief moment, or let me know how I can help you once my systems are fully back online! (Elite PC Assistant offline)",
-                'error' => config('app.debug') ? $e->getMessage() : 'An error occurred'
-            ], 200); // Return 200 so the frontend can display the friendly fallback instead of crashing
+                'reply'  => "Hello! I'm experiencing a brief technical delay. "
+                          . "Please try again in a moment, or let me know how I can help "
+                          . "once my systems are fully back online! (Elite PC Assistant offline)",
+                'error'  => config('app.debug') ? $e->getMessage() : 'An internal error occurred.',
+            ], 200);
         }
     }
 }

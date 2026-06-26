@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreOrderRequest;
 use App\Models\Commande;
 use App\Models\Produit;
 use Illuminate\Http\Request;
@@ -58,16 +59,8 @@ class CommandeController extends Controller
 
     // POST /api/orders — place an order
     // Expected body: { "items": [...], "payment_method": "credit_card", "delivery_address": "...", "delivery_phone": "..." }
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
-        $request->validate([
-            'items'                => 'required|array|min:1',
-            'items.*.produit_id'   => 'required|exists:produits,id',
-            'items.*.quantite'     => 'required|integer|min:1',
-            'payment_method'       => 'required|in:credit_card,paypal,cash_on_delivery',
-            'delivery_address'     => 'required|string|min:10',
-            'delivery_phone'       => 'required|string|min:8',
-        ]);
 
         $total = 0;
         $lines = [];

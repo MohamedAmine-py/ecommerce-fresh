@@ -29,8 +29,9 @@ Route::get('/products',        [ProduitController::class, 'index']);
 Route::get('/products/{id}',   [ProduitController::class, 'show']);
 Route::get('/categories',      [CategorieController::class, 'index']);
 
-// Support Chat agent route
-Route::post('/support/chat',   [SupportChatController::class, 'handleChat']);
+// Support Chat agent route — rate-limited to 30 requests/minute/IP
+Route::post('/support/chat', [SupportChatController::class, 'handleChat'])
+    ->middleware('throttle:ai-chat');
 
 
 // ── AUTHENTICATED ROUTES ───────────────────────────────────────
