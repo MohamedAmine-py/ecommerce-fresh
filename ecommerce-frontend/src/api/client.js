@@ -1,9 +1,19 @@
-const BASE = "http://127.0.0.1:8000/api";
+const BASE = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 export async function apiCall(method, endpoint, body = null, token = null) {
   const headers = { "Content-Type": "application/json", Accept: "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
   const res = await fetch(BASE + endpoint, { method, headers, body: body ? JSON.stringify(body) : null });
-  return res.json();
+  const contentType = res.headers.get("content-type") || "";
+  const data = contentType.includes("application/json") ? await res.json() : null;
+
+  if (!res.ok) {
+    const error = new Error(data?.message || `Request failed with status ${res.status}`);
+    error.status = res.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
 }
 export const login = (data) => apiCall("POST", "/login", data);
 export const register = (data) => apiCall("POST", "/register", data);
@@ -41,4 +51,3 @@ export const createCategory = (data, token) => apiCall("POST", "/categories", da
 export const updateCategory = (id, data, token) => apiCall("PUT", `/categories/${id}`, data, token);
 export const deleteCategory = (id, token) => apiCall("DELETE", `/categories/${id}`, null, token);
 export const sendSupportMessage = (message, history) => apiCall("POST", "/support/chat", { message, history });
-

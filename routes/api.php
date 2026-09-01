@@ -1,13 +1,12 @@
 <?php
 
+use App\Http\Controllers\API\AdminController;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\ProduitController;
 use App\Http\Controllers\API\CategorieController;
 use App\Http\Controllers\API\CommandeController;
-use App\Http\Controllers\API\AdminController;
+use App\Http\Controllers\API\ProduitController;
 use App\Http\Controllers\API\SupportChatController;
 use Illuminate\Support\Facades\Route;
-
 
 /*
  * API ROUTES — all routes here are prefixed with /api automatically by Laravel.
@@ -22,17 +21,16 @@ use Illuminate\Support\Facades\Route;
 // No authentication required
 
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 // Products & categories are public (anyone can browse)
-Route::get('/products',        [ProduitController::class, 'index']);
-Route::get('/products/{id}',   [ProduitController::class, 'show']);
-Route::get('/categories',      [CategorieController::class, 'index']);
+Route::get('/products', [ProduitController::class, 'index']);
+Route::get('/products/{id}', [ProduitController::class, 'show']);
+Route::get('/categories', [CategorieController::class, 'index']);
 
 // Support Chat agent route — rate-limited to 30 requests/minute/IP
 Route::post('/support/chat', [SupportChatController::class, 'handleChat'])
     ->middleware('throttle:ai-chat');
-
 
 // ── AUTHENTICATED ROUTES ───────────────────────────────────────
 // Must send Authorization: Bearer {token} header
@@ -40,14 +38,13 @@ Route::post('/support/chat', [SupportChatController::class, 'handleChat'])
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user',    [AuthController::class, 'me']);
+    Route::get('/user', [AuthController::class, 'me']);
 
     // Orders — clients can place and view their own orders
-    Route::get('/orders',                [CommandeController::class, 'index']);
-    Route::post('/orders',               [CommandeController::class, 'store']);
-    Route::get('/orders/{id}',           [CommandeController::class, 'show']);
-    Route::get('/orders/{id}/invoice',   [CommandeController::class, 'downloadInvoice']);
-
+    Route::get('/orders', [CommandeController::class, 'index']);
+    Route::post('/orders', [CommandeController::class, 'store']);
+    Route::get('/orders/{id}', [CommandeController::class, 'show']);
+    Route::get('/orders/{id}/invoice', [CommandeController::class, 'downloadInvoice']);
 
     // ── ADMIN ONLY ROUTES ──────────────────────────────────────
     // Must be logged in AND have role = 'admin'
@@ -55,13 +52,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('admin')->group(function () {
 
         // Product management
-        Route::post('/products',        [ProduitController::class, 'store']);
-        Route::put('/products/{id}',    [ProduitController::class, 'update']);
+        Route::post('/products', [ProduitController::class, 'store']);
+        Route::put('/products/{id}', [ProduitController::class, 'update']);
         Route::delete('/products/{id}', [ProduitController::class, 'destroy']);
 
         // Category management
-        Route::post('/categories',        [CategorieController::class, 'store']);
-        Route::put('/categories/{id}',    [CategorieController::class, 'update']);
+        Route::post('/categories', [CategorieController::class, 'store']);
+        Route::put('/categories/{id}', [CategorieController::class, 'update']);
         Route::delete('/categories/{id}', [CategorieController::class, 'destroy']);
 
         // Order status management

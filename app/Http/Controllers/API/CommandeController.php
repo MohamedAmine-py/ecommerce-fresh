@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Commande;
 use App\Models\Produit;
-use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /*
  * CommandeController — handles orders.
@@ -45,7 +46,7 @@ class CommandeController extends Controller
         $user = $request->user();
         $commande = Commande::with(['details.produit', 'user'])->find($id);
 
-        if (!$commande) {
+        if (! $commande) {
             return response()->json(['message' => 'Commande non trouvée'], 404);
         }
 
@@ -61,60 +62,70 @@ class CommandeController extends Controller
     // Expected body: { "items": [...], "payment_method": "credit_card", "delivery_address": "...", "delivery_phone": "..." }
     public function store(StoreOrderRequest $request)
     {
+        return DB::transaction(function () use ($request) {
+            $items = collect($request->items);
+            $requestedQuantities = $items
+                ->groupBy('produit_id')
+                ->map(fn ($productItems) => $productItems->sum('quantite'));
 
-        $total = 0;
-        $lines = [];
+            // Lock in a stable order so concurrent checkouts cannot oversell stock.
+            $produits = Produit::query()
+                ->whereIn('id', $requestedQuantities->keys())
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
 
-        // Step 1: validate stock and calculate total
-        foreach ($request->items as $item) {
-            $produit = Produit::find($item['produit_id']);
+            foreach ($requestedQuantities as $produitId => $quantite) {
+                $produit = $produits->get($produitId);
 
-            if ($produit->stock < $item['quantite']) {
-                return response()->json([
-                    'message' => "Stock insuffisant pour : {$produit->nom}"
-                ], 422);
+                if ($produit->stock < $quantite) {
+                    return response()->json([
+                        'message' => "Stock insuffisant pour : {$produit->nom}",
+                    ], 422);
+                }
             }
 
-            $subtotal = $produit->prix * $item['quantite'];
-            $total += $subtotal;
+            $total = 0;
+            $lines = [];
 
-            $lines[] = [
-                'produit'       => $produit,
-                'quantite'      => $item['quantite'],
-                'prix_unitaire' => $produit->prix,
-            ];
-        }
+            // Prices always come from the locked server-side product rows.
+            foreach ($items as $item) {
+                $produit = $produits->get($item['produit_id']);
+                $subtotal = $produit->prix * $item['quantite'];
+                $total += $subtotal;
 
-        // Calculate estimated delivery date (current date + 3 business days)
-        $deliveryDate = $this->calculateDeliveryDate();
+                $lines[] = [
+                    'produit' => $produit,
+                    'quantite' => $item['quantite'],
+                    'prix_unitaire' => $produit->prix,
+                ];
+            }
 
-        // Step 2: create the order
-        $commande = Commande::create([
-            'user_id'                   => $request->user()->id,
-            'statut'                    => 'en_cours',
-            'total'                     => $total,
-            'payment_method'            => $request->payment_method,
-            'delivery_address'          => $request->delivery_address,
-            'delivery_phone'            => $request->delivery_phone,
-            'estimated_delivery_date'   => $deliveryDate,
-        ]);
-
-        // Step 3: create detail lines and deduct stock
-        foreach ($lines as $line) {
-            $commande->details()->create([
-                'produit_id'    => $line['produit']->id,
-                'quantite'      => $line['quantite'],
-                'prix_unitaire' => $line['prix_unitaire'],
+            $commande = Commande::create([
+                'user_id' => $request->user()->id,
+                'statut' => 'en_cours',
+                'total' => $total,
+                'payment_method' => $request->payment_method,
+                'delivery_address' => $request->delivery_address,
+                'delivery_phone' => $request->delivery_phone,
+                'estimated_delivery_date' => $this->calculateDeliveryDate(),
             ]);
 
-            // Deduct stock
-            $line['produit']->decrement('stock', $line['quantite']);
-        }
+            foreach ($lines as $line) {
+                $commande->details()->create([
+                    'produit_id' => $line['produit']->id,
+                    'quantite' => $line['quantite'],
+                    'prix_unitaire' => $line['prix_unitaire'],
+                ]);
+            }
 
-        return response()->json(
-            $commande->load('details.produit'),
-            201
-        );
+            foreach ($requestedQuantities as $produitId => $quantite) {
+                $produits->get($produitId)->decrement('stock', $quantite);
+            }
+
+            return response()->json($commande->load('details.produit'), 201);
+        });
     }
 
     // Helper function to calculate delivery date (3 business days)
@@ -141,35 +152,82 @@ class CommandeController extends Controller
             'statut' => 'required|in:en_cours,validee,annulee',
         ]);
 
-        $commande = Commande::find($id);
+        return DB::transaction(function () use ($request, $id) {
+            $commande = Commande::lockForUpdate()->find($id);
 
-        if (!$commande) {
-            return response()->json(['message' => 'Commande non trouvée'], 404);
-        }
+            if (! $commande) {
+                return response()->json(['message' => 'Commande non trouvée'], 404);
+            }
 
-        $commande->update(['statut' => $request->statut]);
+            $details = $commande->details()->orderBy('produit_id')->get();
+            $quantities = $details->groupBy('produit_id')
+                ->map(fn ($productDetails) => $productDetails->sum('quantite'));
+            $produits = Produit::query()
+                ->whereIn('id', $quantities->keys())
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
 
-        return response()->json($commande);
+            if ($commande->statut !== 'annulee' && $request->statut === 'annulee') {
+                foreach ($quantities as $produitId => $quantite) {
+                    $produits->get($produitId)?->increment('stock', $quantite);
+                }
+            } elseif ($commande->statut === 'annulee' && $request->statut !== 'annulee') {
+                foreach ($quantities as $produitId => $quantite) {
+                    $produit = $produits->get($produitId);
+                    if (! $produit || $produit->stock < $quantite) {
+                        return response()->json([
+                            'message' => $produit
+                                ? "Stock insuffisant pour : {$produit->nom}"
+                                : 'Un produit de cette commande n’existe plus',
+                        ], 422);
+                    }
+                }
+
+                foreach ($quantities as $produitId => $quantite) {
+                    $produits->get($produitId)->decrement('stock', $quantite);
+                }
+            }
+
+            $commande->update(['statut' => $request->statut]);
+
+            return response()->json($commande);
+        });
     }
 
     // DELETE /api/orders/{id} — admin only
     public function destroy($id)
     {
-        $commande = Commande::find($id);
+        return DB::transaction(function () use ($id) {
+            $commande = Commande::lockForUpdate()->find($id);
 
-        if (!$commande) {
-            return response()->json(['message' => 'Commande non trouvée'], 404);
-        }
+            if (! $commande) {
+                return response()->json(['message' => 'Commande non trouvée'], 404);
+            }
 
-        // Return stock before deleting details? Usually when order is cancelled, stock goes back. 
-        // We'll leave it simple for now, or just delete it.
-        // Wait, if it's "en_cours" and we delete, maybe restore stock?
-        // Let's just delete for now. The cascade will handle details if DB has cascade, otherwise we should delete details manually.
-        // Or we can delete details first.
-        $commande->details()->delete();
-        $commande->delete();
+            $details = $commande->details()->orderBy('produit_id')->get();
 
-        return response()->json(['message' => 'Commande supprimée']);
+            // Cancelled orders were already restored when their status changed.
+            if ($commande->statut !== 'annulee') {
+                $quantities = $details->groupBy('produit_id')
+                    ->map(fn ($productDetails) => $productDetails->sum('quantite'));
+                $produits = Produit::query()
+                    ->whereIn('id', $quantities->keys())
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($quantities as $produitId => $quantite) {
+                    $produits->get($produitId)?->increment('stock', $quantite);
+                }
+            }
+
+            $commande->delete();
+
+            return response()->json(['message' => 'Commande supprimée']);
+        });
     }
 
     // GET /api/orders/{id}/invoice — download invoice as PDF
@@ -178,7 +236,7 @@ class CommandeController extends Controller
         $user = $request->user();
         $commande = Commande::with(['details.produit', 'user'])->find($id);
 
-        if (!$commande) {
+        if (! $commande) {
             return response()->json(['message' => 'Commande non trouvée'], 404);
         }
 

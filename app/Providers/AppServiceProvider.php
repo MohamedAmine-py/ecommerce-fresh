@@ -22,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip());
+        });
+
         /*
         |----------------------------------------------------------------------
         | API Rate Limiters
@@ -39,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->ip())
                 ->response(function (Request $request, array $headers) {
                     return response()->json([
-                        'status'  => 'error',
+                        'status' => 'error',
                         'message' => 'Too many requests. Please wait before sending another message.',
                     ], 429, $headers);
                 });
