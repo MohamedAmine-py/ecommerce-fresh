@@ -1,14 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCategories, getProducts } from "../api/client";
-import { useApp } from "../context/AppContext";
 import ProductCard from "../components/ProductCard";
 import { ProductGridSkeleton, SectionHeading, StorefrontState } from "../components/StorefrontUI";
 
 const LOCAL_HARDWARE_FALLBACK = "/pc_logo.png";
 
 export default function Home() {
-  const { setSelectedProduct } = useApp();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,12 +108,7 @@ export default function Home() {
         ) : (
           <div className="grid product-grid">
             {featured.map((p, index) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                index={index}
-                onSelect={setSelectedProduct}
-              />
+              <ProductCard key={p.id} product={p} index={index} />
             ))}
           </div>
         )}

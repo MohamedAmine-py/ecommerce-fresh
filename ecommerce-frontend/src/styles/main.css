@@ -425,3 +425,94 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .benefits article { border-right: 0; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
 }
+
+/* Phase 3B — catalog, product details, and favorites */
+.catalog-page, .favorites-page, .product-detail-page { padding: 62px 0 88px; }
+.catalog-header { padding-bottom: 34px; border-bottom: 1px solid var(--border); }
+.catalog-header h1, .favorites-header h1, .product-detail-summary h1 { color: var(--text); font-size: clamp(36px, 5vw, 58px); line-height: 1.02; letter-spacing: -2.4px; }
+.catalog-header p, .favorites-header p { max-width: 650px; margin-top: 14px; color: var(--text2); font-size: 14px; }
+.catalog-toolbar { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(0, 2fr); gap: 32px; padding: 28px 0; border-bottom: 1px solid var(--border); }
+.catalog-search > span, .catalog-categories > span { display: block; margin-bottom: 9px; color: var(--text3); font: 600 9px/1.2 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
+.catalog-search > div { height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid var(--border2); border-radius: 3px; background: var(--bg2); color: var(--text3); }
+.catalog-search > div:focus-within { border-color: var(--accent); }
+.catalog-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; }
+.catalog-categories .cats { margin: 0; gap: 6px; }
+.cat-chip { min-height: 42px; padding: 0 14px; border: 1px solid var(--border); border-radius: 3px; background: var(--bg2); box-shadow: none; color: var(--text2); font-size: 11px; }
+.cat-chip:hover { background: var(--bg3); }
+.cat-chip.active { background: var(--accent); color: #061014; box-shadow: none; }
+.catalog-results { padding-top: 42px; }
+.catalog-results-heading, .favorites-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+.catalog-results-heading h2 { font-size: 25px; letter-spacing: -.7px; }
+.result-count { flex-shrink: 0; padding: 7px 10px; border: 1px solid var(--border); border-radius: 3px; color: var(--text3); font: 600 9px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.catalog-results .store-state { margin-top: 8px; }
+.store-state button { cursor: pointer; }
+
+.favorites-page { min-height: 650px; }
+.favorites-header { padding-bottom: 30px; border-bottom: 1px solid var(--border); }
+.favorites-grid { margin-top: 34px; }
+.favorites-empty { margin-top: 34px; }
+.wishlist-heart { margin-bottom: 12px; color: var(--accent); font-size: 52px; font-weight: 300; line-height: 1; }
+
+.product-detail-page { min-height: 700px; }
+.product-breadcrumb { display: flex; align-items: center; gap: 9px; margin-bottom: 24px; color: var(--text3); font-size: 11px; }
+.product-breadcrumb a { color: var(--text2); text-decoration: none; }
+.product-breadcrumb a:hover { color: var(--accent); }
+.product-detail-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr); border: 1px solid var(--border); background: var(--bg2); }
+.product-detail-media { position: relative; min-height: 560px; overflow: hidden; border-right: 1px solid var(--border); background: #080b0f; }
+.product-detail-media img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.82); }
+.product-detail-media img.is-fallback { padding: 28%; object-fit: contain; filter: none; }
+.detail-stock-badge { position: absolute; top: 18px; left: 18px; padding: 6px 9px; border: 1px solid rgba(18, 217, 238, .35); border-radius: 3px; background: rgba(8, 12, 17, .88); color: var(--accent); font: 600 9px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.detail-stock-badge.is-low { color: #e7b35d; border-color: rgba(231, 179, 93, .4); }
+.detail-stock-badge.is-out { color: #e27070; border-color: rgba(226, 112, 112, .4); }
+.product-detail-summary { padding: 56px 48px; display: flex; flex-direction: column; justify-content: center; }
+.product-detail-summary h1 { margin-bottom: 20px; font-size: clamp(37px, 4vw, 54px); }
+.product-detail-description { margin-bottom: 28px; color: var(--text2); font-size: 13px; line-height: 1.75; }
+.detail-spec-preview { margin-bottom: 30px; border-top: 1px solid var(--border); }
+.detail-spec-preview div { display: grid; grid-template-columns: 120px 1fr; gap: 18px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.detail-spec-preview span, .product-detail-price > span { color: var(--text3); font: 600 9px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.detail-spec-preview strong { color: var(--text); font-size: 12px; font-weight: 600; }
+.product-detail-price { margin-bottom: 24px; }
+.product-detail-price > span { display: block; margin-bottom: 5px; }
+.product-detail-price strong { color: var(--accent); font-size: 34px; line-height: 1; letter-spacing: -1.2px; }
+.product-detail-actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.detail-cart-button { border: 0; cursor: pointer; }
+.detail-cart-button:disabled { background: var(--bg4); color: var(--text3); cursor: not-allowed; transform: none; }
+.detail-favorite-button { min-height: 44px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid var(--border2); border-radius: 3px; background: transparent; color: var(--text2); cursor: pointer; }
+.detail-favorite-button:hover, .detail-favorite-button.is-active { border-color: var(--accent); color: var(--accent); }
+.detail-favorite-button span { font-size: 11px; font-weight: 700; }
+.product-details-content { display: grid; grid-template-columns: .85fr 1.15fr; gap: 70px; padding: 72px 48px 0; }
+.product-details-content h2 { margin-bottom: 18px; font-size: 26px; letter-spacing: -.8px; }
+.product-details-content > div:first-child p { color: var(--text2); font-size: 13px; line-height: 1.8; }
+.full-specifications { border-top: 1px solid var(--border); }
+.full-specifications-heading { padding: 20px 0; }
+.full-specifications-heading h2 { margin: 0; }
+.specification-row { display: grid; grid-template-columns: 160px 1fr; gap: 20px; padding: 13px 0; border-top: 1px solid var(--border); }
+.specification-row span { color: var(--text3); font: 600 9px 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }
+.specification-row strong { color: var(--text); font-size: 12px; font-weight: 600; }
+.specifications-empty { padding: 20px 0; border-top: 1px solid var(--border); color: var(--text3); font-size: 12px; }
+.product-detail-skeleton { display: grid; grid-template-columns: 1fr 1fr; min-height: 560px; border: 1px solid var(--border); }
+.product-detail-skeleton > .skel { border-radius: 0; }
+.product-detail-skeleton > div:last-child { display: grid; align-content: center; gap: 22px; padding: 50px; }
+.product-detail-skeleton > div:last-child .skel:nth-child(1) { width: 28%; height: 11px; }
+.product-detail-skeleton > div:last-child .skel:nth-child(2) { width: 88%; height: 58px; }
+.product-detail-skeleton > div:last-child .skel:nth-child(3) { width: 100%; height: 120px; }
+
+@media (max-width: 900px) {
+  .catalog-toolbar { grid-template-columns: 1fr; gap: 20px; }
+  .product-detail-hero { grid-template-columns: 1fr; }
+  .product-detail-media { min-height: 430px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .product-details-content { grid-template-columns: 1fr; gap: 46px; padding-inline: 20px; }
+}
+
+@media (max-width: 640px) {
+  .catalog-page, .favorites-page, .product-detail-page { padding: 42px 0 62px; }
+  .catalog-header h1, .favorites-header h1 { font-size: 38px; }
+  .catalog-results-heading, .favorites-header { align-items: flex-start; flex-direction: column; }
+  .product-detail-media { min-height: 330px; }
+  .product-detail-summary { padding: 36px 22px; }
+  .product-detail-actions { grid-template-columns: 1fr; }
+  .detail-favorite-button { width: 100%; }
+  .detail-spec-preview div, .specification-row { grid-template-columns: 105px 1fr; }
+  .product-detail-skeleton { grid-template-columns: 1fr; }
+  .product-detail-skeleton > .skel { min-height: 300px; }
+}
