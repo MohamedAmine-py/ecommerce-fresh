@@ -10,7 +10,7 @@ const IconHeartOutline = () => <svg width="20" height="20" viewBox="0 0 24 24" f
 const IconHeartFilled = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
 
 export default function Navbar() {
-  const { user, cartCount, darkMode, setDarkMode, setCartOpen, setAuthOpen, favorites, search, setSearch } = useApp();
+  const { user, cartCount, darkMode, setDarkMode, setAuthOpen, favorites, search, setSearch } = useApp();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -49,7 +49,7 @@ export default function Navbar() {
           {favorites.length > 0 ? <IconHeartFilled /> : <IconHeartOutline />}
           {favorites.length > 0 && <span className="cart-badge" style={{ background: "var(--accent)" }}>{favorites.length}</span>}
         </NavLink>
-        <button className="nav-icon-btn" onClick={() => setCartOpen(true)} title="Panier">
+        <button className="nav-icon-btn" onClick={() => navigate("/cart")} title="Panier">
           <IconCart />
           {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
         </button>
