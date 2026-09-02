@@ -14,21 +14,42 @@ class OrderInventoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_checkout_uses_server_prices_and_deducts_aggregated_stock(): void
+    public function test_authenticated_user_can_create_an_order(): void
+    {
+        $user = $this->user();
+        $produit = $this->product(stock: 5, price: 12.50);
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/orders', $this->orderPayload([
+            ['produit_id' => $produit->id, 'quantite' => 2],
+        ]))->assertCreated();
+
+        $this->assertDatabaseHas('commandes', [
+            'user_id' => $user->id,
+            'statut' => 'en_cours',
+            'total' => 25,
+        ]);
+        $this->assertDatabaseHas('details_commandes', [
+            'produit_id' => $produit->id,
+            'quantite' => 2,
+            'prix_unitaire' => 12.50,
+        ]);
+        $this->assertSame(3, $produit->fresh()->stock);
+    }
+
+    public function test_checkout_uses_database_prices_instead_of_client_prices(): void
     {
         $user = $this->user();
         $produit = $this->product(stock: 5, price: 12.50);
         Sanctum::actingAs($user);
 
         $response = $this->postJson('/api/orders', $this->orderPayload([
-            ['produit_id' => $produit->id, 'quantite' => 2],
-            ['produit_id' => $produit->id, 'quantite' => 2],
+            ['produit_id' => $produit->id, 'quantite' => 2, 'prix' => 0.01],
         ]));
 
         $response->assertCreated()
-            ->assertJsonPath('total', 50)
-            ->assertJsonCount(2, 'details');
-        $this->assertSame(1, $produit->fresh()->stock);
+            ->assertJsonPath('total', 25)
+            ->assertJsonPath('details.0.prix_unitaire', 12.5);
     }
 
     public function test_insufficient_aggregated_stock_does_not_create_an_order_or_change_stock(): void
@@ -47,7 +68,7 @@ class OrderInventoryTest extends TestCase
         $this->assertSame(3, $produit->fresh()->stock);
     }
 
-    public function test_cancelling_restores_stock_once_and_reopening_reserves_it_again(): void
+    public function test_cancelling_an_order_restores_stock_exactly_once(): void
     {
         [$admin, $commande, $produit] = $this->orderWithReservedStock();
         Sanctum::actingAs($admin);
@@ -60,12 +81,9 @@ class OrderInventoryTest extends TestCase
             ->assertOk();
         $this->assertSame(5, $produit->fresh()->stock);
 
-        $this->patchJson("/api/orders/{$commande->id}/status", ['statut' => 'validee'])
-            ->assertOk();
-        $this->assertSame(3, $produit->fresh()->stock);
     }
 
-    public function test_deleting_restores_reserved_stock_but_does_not_double_restore_cancelled_stock(): void
+    public function test_deleting_an_active_order_restores_stock_safely(): void
     {
         [$admin, $commande, $produit] = $this->orderWithReservedStock();
         Sanctum::actingAs($admin);
@@ -73,11 +91,27 @@ class OrderInventoryTest extends TestCase
         $this->deleteJson("/api/orders/{$commande->id}")->assertOk();
         $this->assertSame(5, $produit->fresh()->stock);
 
-        [$admin, $commande, $produit] = $this->orderWithReservedStock();
-        Sanctum::actingAs($admin);
-        $this->patchJson("/api/orders/{$commande->id}/status", ['statut' => 'annulee'])
-            ->assertOk();
-        $this->deleteJson("/api/orders/{$commande->id}")->assertOk();
+        $this->assertDatabaseMissing('commandes', ['id' => $commande->id]);
+    }
+
+    public function test_user_cannot_view_another_users_order(): void
+    {
+        [, $commande] = $this->orderWithReservedStock();
+        Sanctum::actingAs($this->user());
+
+        $this->getJson("/api/orders/{$commande->id}")
+            ->assertForbidden();
+    }
+
+    public function test_unauthenticated_user_cannot_create_an_order(): void
+    {
+        $produit = $this->product();
+
+        $this->postJson('/api/orders', $this->orderPayload([
+            ['produit_id' => $produit->id, 'quantite' => 1],
+        ]))->assertUnauthorized();
+
+        $this->assertDatabaseCount('commandes', 0);
         $this->assertSame(5, $produit->fresh()->stock);
     }
 

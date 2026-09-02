@@ -12,21 +12,27 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create admin account
-        User::create([
-            'nom'          => 'Administrateur',
-            'email'        => 'admin@ecommerce.com',
-            'mot_de_passe' => Hash::make('admin123'),
-            'role'         => 'admin',
-        ]);
+        // Demo credentials are convenient locally but must never create known
+        // accounts when this seeder is run in staging or production.
+        if (app()->environment(['local', 'testing'])) {
+            User::updateOrCreate(
+                ['email' => env('SEED_ADMIN_EMAIL', 'admin@ecommerce.test')],
+                [
+                    'nom' => env('SEED_ADMIN_NAME', 'Administrateur'),
+                    'mot_de_passe' => Hash::make(env('SEED_ADMIN_PASSWORD', 'admin123')),
+                    'role' => 'admin',
+                ]
+            );
 
-        // Create test client account
-        User::create([
-            'nom'          => 'Mohamed Amine',
-            'email'        => 'client@ecommerce.com',
-            'mot_de_passe' => Hash::make('client123'),
-            'role'         => 'client',
-        ]);
+            User::updateOrCreate(
+                ['email' => env('SEED_CLIENT_EMAIL', 'client@ecommerce.test')],
+                [
+                    'nom' => env('SEED_CLIENT_NAME', 'Client de démonstration'),
+                    'mot_de_passe' => Hash::make(env('SEED_CLIENT_PASSWORD', 'client123')),
+                    'role' => 'client',
+                ]
+            );
+        }
 
         // Create categories
         $gamerPcs    = Categorie::create(['nom' => 'Gamer PCs',      'description' => 'High-performance gaming desktops']);

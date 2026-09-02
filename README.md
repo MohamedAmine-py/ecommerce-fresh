@@ -243,7 +243,7 @@ npm run dev
 **Combined Execution (Optional):**
 If you have `concurrently` installed globally:
 ```bash
-npm run dev
+composer run dev
 # This concurrently runs both servers
 ```
 
@@ -362,7 +362,6 @@ elite-pc/
 │   └── package.json
 ├── .env.example
 ├── composer.json
-├── package.json
 └── README.md
 ```
 
