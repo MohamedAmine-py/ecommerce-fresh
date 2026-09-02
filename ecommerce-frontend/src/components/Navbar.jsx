@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 
@@ -12,6 +12,7 @@ const IconHeartFilled = () => <svg width="20" height="20" viewBox="0 0 24 24" fi
 export default function Navbar() {
   const { user, cartCount, darkMode, setDarkMode, setCartOpen, setAuthOpen, favorites, search, setSearch } = useApp();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -19,17 +20,16 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="nav">
-      {/* BRAND LOGO REPLACED HERE */}
-      <Link to="/" className="nav-logo" style={{ display: "flex", alignItems: "center" }}>
+    <header className="site-header">
+    <nav className="nav storefront-container" aria-label="Navigation principale">
+      <Link to="/" className="nav-logo" aria-label="Elite PC - Accueil">
         <img 
           src="/pc_logo.png" 
           alt="Elite PC Logo" 
-          style={{ height: "36px", width: "auto", objectContain: "contain" }} 
         />
       </Link>
 
-      <div className="nav-links">
+      <div className={`nav-links ${mobileOpen ? "is-open" : ""}`}>
         <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} end>Boutique</NavLink>
         <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>Produits</NavLink>
         <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>À Propos</NavLink>
@@ -57,7 +57,11 @@ export default function Navbar() {
           <div className="nav-avatar">{user ? user.nom[0].toUpperCase() : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>}</div>
           <span className="nav-user-name">{user ? user.nom.split(" ")[0] : "Connexion"}</span>
         </div>
+        <button className="nav-menu-btn" onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-label="Ouvrir le menu">
+          <span /><span /><span />
+        </button>
       </div>
     </nav>
+    </header>
   );
 }

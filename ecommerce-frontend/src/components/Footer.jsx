@@ -6,37 +6,28 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-grid">
-          <div className="footer-col">
-            <h3>À propos</h3>
-            <Link to="/about">Qui sommes-nous</Link>
-            <Link to="/about">Nos valeurs</Link>
-            <Link to="/about">Garanties</Link>
+          <div className="footer-brand">
+            <Link className="footer-logo" to="/"><img src="/pc_logo.png" alt="Elite PC" /></Link>
+            <p>Matériel et systèmes PC haute performance, réunis dans une expérience claire et exigeante.</p>
           </div>
           <div className="footer-col">
-            <h3>Support</h3>
-            <Link to="/contact">Centre d'aide</Link>
-            <Link to="/contact">Retours & échanges</Link>
-            <Link to="/contact">Garantie</Link>
+            <h3>Boutique</h3>
+            <Link to="/products">Tous les produits</Link>
+            <Link to="/favorites">Favoris</Link>
           </div>
           <div className="footer-col">
-            <h3>Légal</h3>
-            <a href="#">Confidentialité</a>
-            <a href="#">CGV</a>
-            <a href="#">Cookies</a>
+            <h3>Elite PC</h3>
+            <Link to="/about">À propos</Link>
+            <Link to="/contact">Contact</Link>
           </div>
           <div className="footer-col">
-            <h3>Contact</h3>
-            <a href="mailto:support@elitepc.com">support@elitepc.com</a>
-            <a href="tel:+33123456789">+33 1 23 45 67 89</a>
+            <h3>Votre compte</h3>
+            <Link to="/orders">Commandes</Link>
           </div>
         </div>
         <div className="footer-bottom">
           <div>© 2026 Elite PC. Tous droits réservés.</div>
-          <div style={{ display: "flex", gap: 20 }}>
-            <a href="#" style={{ color: "rgba(255,255,255,.4)", textDecoration: "none" }}>Twitter</a>
-            <a href="#" style={{ color: "rgba(255,255,255,.4)", textDecoration: "none" }}>Instagram</a>
-            <a href="#" style={{ color: "rgba(255,255,255,.4)", textDecoration: "none" }}>LinkedIn</a>
-          </div>
+          <span>Conçu pour le matériel qui compte.</span>
         </div>
       </div>
     </footer>
