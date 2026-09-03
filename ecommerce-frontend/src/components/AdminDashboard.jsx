@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   createCategory, createProduct, createUser, deleteCategory, deleteOrder,
@@ -41,6 +41,7 @@ export default function AdminDashboard({ token, user, onToast }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const loadedToken = useRef(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -62,9 +63,11 @@ export default function AdminDashboard({ token, user, onToast }) {
   }, [token]);
 
   useEffect(() => {
+    if (loadedToken.current === token) return;
+    loadedToken.current = token;
     const request = Promise.resolve().then(loadData);
     return () => { void request; };
-  }, [loadData]);
+  }, [loadData, token]);
 
   const pageMeta = useMemo(() => ({
     overview: ["Dashboard", "A current overview of the Elite PC store."],
@@ -74,12 +77,35 @@ export default function AdminDashboard({ token, user, onToast }) {
     users: ["Users", "Manage customer and administrator accounts."],
   })[tab], [tab]);
 
-  const mutate = async (operation, success, after) => {
+  const refresh = async (resource) => {
+    if (resource === "product") {
+      const [productResponse, statsResponse] = await Promise.all([getProducts(), getStats(token)]);
+      setProducts(productResponse?.data || []);
+      setStats(statsResponse);
+    } else if (resource === "category") {
+      const [categoriesResponse, productResponse, statsResponse] = await Promise.all([getCategories(), getProducts(), getStats(token)]);
+      setCategories(Array.isArray(categoriesResponse) ? categoriesResponse : []);
+      setProducts(productResponse?.data || []);
+      setStats(statsResponse);
+    } else if (resource === "user") {
+      const [usersResponse, ordersResponse, statsResponse] = await Promise.all([getUsers(token), getOrders(token), getStats(token)]);
+      setUsers(Array.isArray(usersResponse) ? usersResponse : []);
+      setOrders(Array.isArray(ordersResponse) ? ordersResponse : []);
+      setStats(statsResponse);
+    } else if (resource === "order") {
+      const [ordersResponse, statsResponse, productResponse] = await Promise.all([getOrders(token), getStats(token), getProducts()]);
+      setOrders(Array.isArray(ordersResponse) ? ordersResponse : []);
+      setStats(statsResponse);
+      setProducts(productResponse?.data || []);
+    }
+  };
+
+  const mutate = async (operation, success, resource, after) => {
     setActionLoading(true);
     try {
       await operation();
       if (after) after();
-      await loadData();
+      await refresh(resource);
       onToast(success);
     } catch (error) {
       onToast(requestMessage(error), "error");
@@ -99,16 +125,16 @@ export default function AdminDashboard({ token, user, onToast }) {
 
   const saveProduct = () => mutate(
     () => editing ? updateProduct(editing.id, productForm, token) : createProduct(productForm, token),
-    editing ? "Product updated" : "Product created", () => setModal(null),
+    editing ? "Product updated" : "Product created", "product", () => setModal(null),
   );
   const saveCategory = () => mutate(
     () => editing ? updateCategory(editing.id, categoryForm, token) : createCategory(categoryForm, token),
-    editing ? "Category updated" : "Category created", () => setModal(null),
+    editing ? "Category updated" : "Category created", "category", () => setModal(null),
   );
   const saveUser = () => {
     const payload = { ...userForm };
     if (editing && !payload.mot_de_passe) delete payload.mot_de_passe;
-    return mutate(() => editing ? updateUser(editing.id, payload, token) : createUser(payload, token), editing ? "User updated" : "User created", () => setModal(null));
+    return mutate(() => editing ? updateUser(editing.id, payload, token) : createUser(payload, token), editing ? "User updated" : "User created", "user", () => setModal(null));
   };
   const remove = (kind, id) => {
     const labels = { product: "product", category: "category", order: "order", user: "user" };
@@ -116,9 +142,9 @@ export default function AdminDashboard({ token, user, onToast }) {
     if (!window.confirm(`${warnings[kind] || `Delete this ${labels[kind]}?`}${warnings[kind] ? " Continue?" : ""}`)) return;
     const calls = { product: deleteProduct, category: deleteCategory, order: deleteOrder, user: deleteUser };
     setDeletingId(`${kind}-${id}`);
-    mutate(() => calls[kind](id, token), `${labels[kind][0].toUpperCase()}${labels[kind].slice(1)} deleted`);
+    mutate(() => calls[kind](id, token), `${labels[kind][0].toUpperCase()}${labels[kind].slice(1)} deleted`, kind);
   };
-  const changeOrderStatus = (id, statut) => mutate(() => updateOrderStatus(id, statut, token), "Order status updated");
+  const changeOrderStatus = (id, statut) => mutate(() => updateOrderStatus(id, statut, token), "Order status updated", "order");
 
   return (
     <div className="admin-shell">

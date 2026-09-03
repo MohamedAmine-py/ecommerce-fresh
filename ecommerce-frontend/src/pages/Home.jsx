@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCategories, getProducts } from "../api/client";
 import ProductCard from "../components/ProductCard";
@@ -24,17 +24,6 @@ export default function Home() {
 
   const featured = products.slice(0, 4);
   const heroImage = featured.find((product) => product.image)?.image || LOCAL_HARDWARE_FALLBACK;
-
-  const uniqueCategories = useMemo(() => {
-    const seen = new Set();
-
-    return categories.filter((category) => {
-      const key = String(category.nom || category.id).trim().toLowerCase();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [categories]);
 
   const imageForCategory = (category) =>
     products.find((product) => Number(product.categorie_id) === Number(category.id))?.image ||
@@ -72,9 +61,9 @@ export default function Home() {
             <div className="category-grid category-grid-loading">
               {Array.from({ length: 5 }, (_, index) => <div className="skel category-card" key={index} />)}
             </div>
-          ) : uniqueCategories.length > 0 ? (
+          ) : categories.length > 0 ? (
             <div className="category-grid">
-              {uniqueCategories.map((category) => (
+              {categories.map((category) => (
                 <Link className="category-card" to="/products" key={category.id}>
                   <img
                     src={imageForCategory(category)}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getProducts, getCategories } from "../api/client";
 import { useApp } from "../context/AppContext";
 import ProductCard from "../components/ProductCard";
@@ -22,41 +22,7 @@ export default function Products() {
       .finally(() => setLoading(false));
   }, []);
 
-  const uniqueCategories = useMemo(() => {
-    const seen = new Set();
-    return categories.filter((category) => {
-      const key = String(category.nom || category.id).trim().toLowerCase();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }, [categories]);
-
-  const uniqueProducts = useMemo(() => {
-    const seen = new Set();
-
-    return products.filter((product) => {
-      const signature = JSON.stringify([
-        product.nom,
-        product.categorie?.nom,
-        Number(product.prix),
-        product.description,
-        product.image,
-        product.brand,
-        product.processor,
-        product.graphics_card,
-        product.ram_details,
-        product.storage_details,
-        product.is_custom_build,
-      ]);
-
-      if (seen.has(signature)) return false;
-      seen.add(signature);
-      return true;
-    });
-  }, [products]);
-
-  const filtered = uniqueProducts.filter((p) => {
+  const filtered = products.filter((p) => {
     const ms = p.nom.toLowerCase().includes(search.toLowerCase());
     const mc = !activeCat || Number(p.categorie_id) === Number(activeCat);
     return ms && mc;
@@ -79,7 +45,7 @@ export default function Products() {
           <span>Catégorie</span>
           <div className="cats">
             <button className={`cat-chip ${activeCat === null ? "active" : ""}`} onClick={() => setActiveCat(null)}>Tous</button>
-            {uniqueCategories.map((category) => (
+            {categories.map((category) => (
               <button key={category.id} className={`cat-chip ${activeCat === category.id ? "active" : ""}`} onClick={() => setActiveCat(activeCat === category.id ? null : category.id)}>{category.nom}</button>
             ))}
           </div>
@@ -88,7 +54,7 @@ export default function Products() {
 
       <section className="catalog-results" id="products">
         <div className="catalog-results-heading">
-          <div><span className="store-eyebrow">Résultats</span><h2>{activeCat ? uniqueCategories.find((category) => category.id === activeCat)?.nom : "Tous les produits"}</h2></div>
+          <div><span className="store-eyebrow">Résultats</span><h2>{activeCat ? categories.find((category) => category.id === activeCat)?.nom : "Tous les produits"}</h2></div>
           {!loading && !error && <span className="result-count">{filtered.length} produit{filtered.length !== 1 ? "s" : ""}</span>}
         </div>
 
