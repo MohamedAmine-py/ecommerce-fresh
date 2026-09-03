@@ -162,7 +162,7 @@ export default function AdminDashboard({ token, user, onToast }) {
         {loading && !stats ? <AdminState title="Loading Admin" message="Retrieving current store data…" />
           : loadError ? <AdminState title="Admin data unavailable" message={loadError} action="Retry" onAction={loadData} />
           : <>
-            {tab === "overview" && <Overview stats={stats} />}
+            {tab === "overview" && <Overview stats={stats} orders={orders} />}
             {tab === "products" && <Products products={products} onAdd={() => openProduct()} onEdit={openProduct} onDelete={(id) => remove("product", id)} deletingId={deletingId} />}
             {tab === "categories" && <Categories categories={categories} onAdd={() => openCategory()} onEdit={openCategory} onDelete={(id) => remove("category", id)} deletingId={deletingId} />}
             {tab === "orders" && <Orders orders={orders} expandedOrder={expandedOrder} setExpandedOrder={setExpandedOrder} onStatus={changeOrderStatus} onDelete={(id) => remove("order", id)} deletingId={deletingId} actionLoading={actionLoading} />}
@@ -177,9 +177,49 @@ export default function AdminDashboard({ token, user, onToast }) {
   );
 }
 
-function Overview({ stats }) {
+function orderTrend(orders, days = 7) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: days }, (_, index) => {
+    const day = new Date(today);
+    day.setDate(today.getDate() - (days - index - 1));
+    const nextDay = new Date(day);
+    nextDay.setDate(day.getDate() + 1);
+    const count = orders.filter((order) => {
+      const placedAt = new Date(order.created_at);
+      return placedAt >= day && placedAt < nextDay;
+    }).length;
+
+    return {
+      key: day.toISOString().slice(0, 10),
+      label: day.toLocaleDateString(undefined, { weekday: "short" }),
+      dateLabel: day.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      count,
+    };
+  });
+}
+
+function Overview({ stats, orders }) {
   const cards = [["Clients", stats?.total_users], ["Products", stats?.total_produits], ["Orders", stats?.total_commandes], ["In progress", stats?.commandes_en_cours], ["Confirmed revenue", money(stats?.revenus_total)]];
-  return <div className="admin-overview"><div className="admin-stat-grid">{cards.map(([label, value], index) => <article className="admin-stat" key={label}><span>0{index + 1}</span><strong>{value ?? 0}</strong><p>{label}</p></article>)}</div><Panel title="Recent Orders"><AdminTable headers={["Order", "Customer", "Total", "Status", "Date"]}>{(stats?.recent_orders || []).map((order) => <tr key={order.id}><td className="admin-id">#{order.id}</td><td>{order.user?.nom || "—"}</td><td>{money(order.total)}</td><td><Status value={order.statut} /></td><td>{date(order.created_at)}</td></tr>)}</AdminTable></Panel></div>;
+  const trend = orderTrend(orders);
+  const maxOrders = Math.max(1, ...trend.map((point) => point.count));
+  const periodTotal = trend.reduce((sum, point) => sum + point.count, 0);
+
+  return <div className="admin-overview">
+    <div className="admin-stat-grid">{cards.map(([label, value], index) => <article className="admin-stat" key={label}><span>0{index + 1}</span><strong>{value ?? 0}</strong><p>{label}</p></article>)}</div>
+    <section className="admin-trend-panel" aria-labelledby="admin-order-trend-title">
+      <header><div><span>Order activity</span><h2 id="admin-order-trend-title">Orders — last 7 days</h2><p>All customer orders, grouped by placement date.</p></div><strong>{periodTotal}<small>orders</small></strong></header>
+      <div className="admin-bar-chart" role="img" aria-label={`${periodTotal} orders placed over the last seven days`}>
+        {trend.map((point) => <div className="admin-bar-column" key={point.key} title={`${point.dateLabel}: ${point.count} order${point.count === 1 ? "" : "s"}`}>
+          <span className="admin-bar-value">{point.count}</span>
+          <div className="admin-bar-track"><span style={{ height: `${(point.count / maxOrders) * 100}%` }} /></div>
+          <span className="admin-bar-day">{point.label}<small>{point.dateLabel}</small></span>
+        </div>)}
+      </div>
+    </section>
+    <Panel title="Recent Orders"><AdminTable headers={["Order", "Customer", "Total", "Status", "Date"]}>{(stats?.recent_orders || []).map((order) => <tr key={order.id}><td className="admin-id">#{order.id}</td><td>{order.user?.nom || "—"}</td><td>{money(order.total)}</td><td><Status value={order.statut} /></td><td>{date(order.created_at)}</td></tr>)}</AdminTable></Panel>
+  </div>;
 }
 
 function Products({ products, onAdd, onEdit, onDelete, deletingId }) {
