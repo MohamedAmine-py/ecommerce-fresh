@@ -9,12 +9,14 @@ use Illuminate\Foundation\Http\FormRequest;
  *
  * Security measures:
  * - Message length capped at 2000 characters to prevent prompt-injection bloat.
- * - Conversation history limited to 50 entries to prevent payload abuse.
+ * - Conversation history limited to 10 entries to prevent payload abuse.
  * - HTML tags stripped from the user message in prepareForValidation().
  * - Role field whitelisted to 'user', 'model', or 'assistant' only.
  */
 class SupportChatRequest extends FormRequest
 {
+    public const HISTORY_LIMIT = 10;
+
     /**
      * All users (authenticated or guest) can use the support chat.
      */
@@ -44,9 +46,9 @@ class SupportChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'message'           => 'required|string|max:2000',
-            'history'           => 'nullable|array|max:50',
-            'history.*.role'    => 'required|string|in:user,model,assistant',
+            'message' => 'required|string|max:2000',
+            'history' => 'nullable|array|max:'.self::HISTORY_LIMIT,
+            'history.*.role' => 'required|string|in:user,model,assistant',
             'history.*.content' => 'required|string|max:5000',
         ];
     }
@@ -60,8 +62,8 @@ class SupportChatRequest extends FormRequest
     {
         return [
             'message.required' => 'Please enter a message to send to the assistant.',
-            'message.max'      => 'Your message exceeds the maximum length of 2000 characters.',
-            'history.max'      => 'Conversation history is too long. Please start a new chat.',
+            'message.max' => 'Your message exceeds the maximum length of 2000 characters.',
+            'history.max' => 'Conversation history may contain at most '.self::HISTORY_LIMIT.' recent messages.',
             'history.*.role.in' => 'Invalid message role in conversation history.',
         ];
     }

@@ -1,14 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { sendSupportMessage } from "../api/client";
+import { buildSupportHistory } from "../utils/chatHistory";
+import { BrandMark } from "./BrandLogo";
 import "../styles/SupportChat.css";
 
 // SVG Icons
-const IconChatBubble = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-  </svg>
-);
-
 const IconClose = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -28,7 +24,8 @@ export default function SupportChat() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Welcome to **Elite AI**. I can help you choose from the current Elite PC catalog, compare available hardware, and answer product or compatibility questions.\n\nWhat are you shopping for today?"
+      content: "Welcome to **Elite AI**. I can help you choose from the current Elite PC catalog, compare available hardware, and answer product or compatibility questions.\n\nWhat are you shopping for today?",
+      isIntro: true,
     }
   ]);
   const [input, setInput] = useState("");
@@ -58,11 +55,8 @@ export default function SupportChat() {
     setIsLoading(true);
 
     try {
-      // Format history to match what the backend expects (converting 'assistant' to 'model')
-      const formattedHistory = messages.map(msg => ({
-        role: msg.role === "assistant" ? "model" : "user",
-        content: msg.content
-      }));
+      // Keep five recent user/assistant turns. The current query is sent separately.
+      const formattedHistory = buildSupportHistory(messages);
 
       // Call our Laravel API endpoint
       const response = await sendSupportMessage(userQuery, formattedHistory);
@@ -164,10 +158,10 @@ export default function SupportChat() {
         <button 
           className="support-chat-launcher" 
           onClick={() => setIsOpen(true)}
-          title="Elite PC Support"
+          title="Open Elite AI"
           aria-label="Open Elite AI shopping assistant"
         >
-          <IconChatBubble />
+          <BrandMark title="Elite PC AI" />
           <span className="support-chat-pulse" />
         </button>
       )}

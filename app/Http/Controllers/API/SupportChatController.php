@@ -43,8 +43,12 @@ class SupportChatController extends Controller
      */
     public function handleChat(SupportChatRequest $request)
     {
-        $message      = $request->input('message');
-        $historyInput = $request->input('history', []);
+        $validated = $request->validated();
+        $message = $validated['message'];
+        $historyInput = array_slice(
+            $validated['history'] ?? [],
+            -SupportChatRequest::HISTORY_LIMIT,
+        );
 
         // ── Step 1: Reconstruct conversation history ────────────────
         // Map frontend roles to Gemini-native Content structures
