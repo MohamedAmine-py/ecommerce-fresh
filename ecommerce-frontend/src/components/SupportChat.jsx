@@ -28,11 +28,12 @@ export default function SupportChat() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "👋 Hello! I'm the **Elite PC Assistant**, your expert PC builder and technical advisor. I'm here to help you build the ultimate gaming or workstation rig.\n\n- **Custom PC Builds** — recommendations for Gamer PCs and Workstations\n- **Hardware Compatibility** — check if your CPU, GPU, and motherboard match\n- **Performance Estimates** — framerates and rendering bottlenecks\n- **Peripherals & Accessories** — high-performance mice, keyboards, and cooling\n\nHow can I help you build your dream setup today?"
+      content: "Welcome to **Elite AI**. I can help you choose from the current Elite PC catalog, compare available hardware, and answer product or compatibility questions.\n\nWhat are you shopping for today?"
     }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const historyEndRef = useRef(null);
 
@@ -49,6 +50,7 @@ export default function SupportChat() {
 
     const userQuery = input.trim();
     setInput("");
+    setHasError(false);
 
     // Append user's message to local state
     const updatedMessages = [...messages, { role: "user", content: userQuery }];
@@ -68,19 +70,23 @@ export default function SupportChat() {
       if (response && response.status === "success") {
         setMessages(prev => [...prev, { role: "assistant", content: response.reply }]);
       } else if (response && response.reply) {
-        // Handle error responses that contain a friendly fallback message from our backend
-        setMessages(prev => [...prev, { role: "assistant", content: response.reply }]);
+        setHasError(true);
+        setMessages(prev => [...prev, { role: "assistant", content: response.reply, state: "error" }]);
       } else {
+        setHasError(true);
         setMessages(prev => [...prev, { 
           role: "assistant", 
-          content: "Thank you for your message. I encountered a small technical issue connecting to the server. Please try again in a moment and I'll be happy to assist you!" 
+          content: "I couldn't retrieve a response just now. Please try again in a moment.",
+          state: "error"
         }]);
       }
     } catch (error) {
       console.error("Support Chat API Error:", error);
+      setHasError(true);
       setMessages(prev => [...prev, { 
         role: "assistant", 
-        content: "It looks like there was a temporary connection issue on our end. Please try sending your message again and I'll get right back to you!" 
+        content: "I couldn't connect to Elite AI. Your message was not answered, so please try again.",
+        state: "error"
       }]);
     } finally {
       setIsLoading(false);
@@ -159,7 +165,7 @@ export default function SupportChat() {
           className="support-chat-launcher" 
           onClick={() => setIsOpen(true)}
           title="Elite PC Support"
-          aria-label="Open 24/7 support chat"
+          aria-label="Open Elite AI shopping assistant"
         >
           <IconChatBubble />
           <span className="support-chat-pulse" />
@@ -172,13 +178,13 @@ export default function SupportChat() {
           {/* Header */}
           <div className="support-chat-header">
             <div className="support-chat-agent-info">
-              <div className="support-chat-avatar">
-                E
+              <div className="support-chat-avatar" aria-hidden="true">
+                AI
                 <span className="support-chat-avatar-status" />
               </div>
               <div className="support-chat-agent-meta">
-                <span className="support-chat-agent-name">Elite PC Assistant</span>
-                <span className="support-chat-agent-role">Expert PC Builder • 24/7</span>
+                <span className="support-chat-agent-name">Elite AI</span>
+                <span className="support-chat-agent-role">Hardware shopping assistant</span>
               </div>
             </div>
             <button 
@@ -192,10 +198,11 @@ export default function SupportChat() {
           </div>
 
           {/* Messages Viewport */}
-          <div className="support-chat-history">
+          <div className="support-chat-history" aria-live="polite">
             {messages.map((msg, index) => (
               <div key={index} className={`support-chat-message-row ${msg.role}`}>
-                <div className="support-chat-bubble">
+                <div className={`support-chat-bubble ${msg.state === "error" ? "is-error" : ""}`} role={msg.state === "error" ? "alert" : undefined}>
+                  <span className="support-chat-message-label">{msg.role === "assistant" ? "Elite AI" : "You"}</span>
                   {renderFormattedContent(msg.content)}
                 </div>
               </div>
@@ -204,7 +211,8 @@ export default function SupportChat() {
             {/* AI Typing Indicator */}
             {isLoading && (
               <div className="support-chat-message-row assistant">
-                <div className="support-chat-bubble" style={{ padding: "10px 14px" }}>
+                <div className="support-chat-bubble support-chat-thinking" role="status">
+                  <span className="support-chat-message-label">Elite AI is thinking</span>
                   <div className="support-chat-typing-indicator">
                     <div className="support-chat-typing-dot" />
                     <div className="support-chat-typing-dot" />
@@ -217,15 +225,22 @@ export default function SupportChat() {
           </div>
 
           {/* Input Form Bar */}
-          <form className="support-chat-input-bar" onSubmit={handleSend}>
-            <input
-              type="text"
+          <div className="support-chat-grounding">Recommendations use the current Elite PC catalog.</div>
+          <form className={`support-chat-input-bar ${hasError ? "has-error" : ""}`} onSubmit={handleSend}>
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about RTX 4090 builds, AM5 motherboards, compatibility..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
+              placeholder="Ask about products, specifications, or compatibility…"
               className="support-chat-input-field"
               disabled={isLoading}
               maxLength={2000}
+              rows={1}
             />
             <button 
               type="submit" 
