@@ -12,6 +12,8 @@ import Cart from "./pages/Cart";
 import Orders from "./pages/Orders";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
+import Auth from "./pages/Auth";
+import OrderDetails from "./pages/OrderDetails";
 
 export default function App() {
   return (
@@ -28,6 +30,9 @@ export default function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/orders/:id" element={<OrderDetails />} />
+            <Route path="/login" element={<Auth mode="login" />} />
+            <Route path="/register" element={<Auth mode="register" />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </Layout>

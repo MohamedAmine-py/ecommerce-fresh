@@ -25,6 +25,7 @@ export const createProduct = (data, token) => apiCall("POST", "/products", data,
 export const updateProduct = (id, data, token) => apiCall("PUT", `/products/${id}`, data, token);
 export const deleteProduct = (id, token) => apiCall("DELETE", `/products/${id}`, null, token);
 export const getOrders = (token) => apiCall("GET", "/orders", null, token);
+export const getOrder = (id, token) => apiCall("GET", `/orders/${id}`, null, token);
 export const createOrder = (data, token) => apiCall("POST", "/orders", data, token);
 export const updateOrderStatus = (id, statut, token) => apiCall("PATCH", `/orders/${id}/status`, { statut }, token);
 export const getStats = (token) => apiCall("GET", "/admin/stats", null, token);

@@ -53,7 +53,7 @@ export default function Navbar() {
           <IconCart />
           {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
         </button>
-        <div className="nav-user-btn" onClick={() => setAuthOpen(true)}>
+        <div className="nav-user-btn" onClick={() => user ? setAuthOpen(true) : navigate("/login")}>
           <div className="nav-avatar">{user ? user.nom[0].toUpperCase() : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>}</div>
           <span className="nav-user-name">{user ? user.nom.split(" ")[0] : "Connexion"}</span>
         </div>
