@@ -1,71 +1,55 @@
 import React from "react";
+import { Link } from "react-router-dom";
+
+const principles = [
+  {
+    number: "01",
+    title: "Performance first",
+    text: "Des ordinateurs, composants et périphériques pensés pour le jeu, la création et les charges de travail exigeantes.",
+  },
+  {
+    number: "02",
+    title: "Des informations utiles",
+    text: "Prix, disponibilité et caractéristiques techniques sont présentés clairement pour faciliter chaque comparaison.",
+  },
+  {
+    number: "03",
+    title: "Pour les passionnés de PC",
+    text: "Une expérience directe et lisible, conçue pour celles et ceux qui veulent comprendre le matériel qu'ils choisissent.",
+  },
+];
 
 export default function About() {
   return (
-    <div style={{ paddingTop: 60, paddingBottom: 60, maxWidth: 800, margin: "0 auto" }}>
-      <div 
-        style={{ 
-          background: "#0f172a", 
-          borderRadius: 24, 
-          border: "1px solid #1e293b", 
-          padding: "48px 40px", 
-          boxShadow: "0 20px 48px rgba(0,0,0,0.4)",
-          color: "#f8fafc"
-        }}
-      >
-        <h1 
-          style={{ 
-            fontSize: "clamp(32px, 4vw, 44px)", 
-            fontWeight: 900, 
-            letterSpacing: "-1.5px", 
-            marginBottom: 24, 
-            background: "linear-gradient(135deg, #00e5ff, #00b8d4)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent"
-          }}
-        >
-          L'Histoire d'Elite PC
-        </h1>
-        <p style={{ fontSize: 16, color: "#94a3b8", lineHeight: 1.8, marginBottom: 36 }}>
-          Fondée par des passionnés de hardware et de gaming compétitif, **Elite PC** est la destination ultime des joueurs et créateurs exigeant des performances sans compromis. Nous croyons que chaque pixel compte, chaque seconde d'encodage est précieuse, et chaque configuration mérite une attention millimétrée.
+    <main className="simple-page about-page">
+      <header className="simple-page-hero">
+        <span className="store-eyebrow">À propos d'Elite PC</span>
+        <h1>Le matériel qui compte,<br /><em>présenté clairement.</em></h1>
+        <p>
+          Elite PC réunit des systèmes et composants haute performance dans une
+          boutique pensée pour rendre le choix du matériel plus simple et plus précis.
         </p>
+        <Link className="button button-primary" to="/products">Explorer le catalogue</Link>
+      </header>
 
-        <hr style={{ border: "none", borderTop: "1px solid #1e293b", marginBottom: 36 }} />
+      <section className="about-principles" aria-label="Les principes Elite PC">
+        {principles.map((principle) => (
+          <article className="simple-info-card" key={principle.number}>
+            <span className="simple-card-number">{principle.number}</span>
+            <h2>{principle.title}</h2>
+            <p>{principle.text}</p>
+          </article>
+        ))}
+      </section>
 
-        {/* Mission Statement */}
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: "#f8fafc", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ color: "#00e5ff" }}>⚡</span> Notre Mission
-          </h2>
-          <p style={{ fontSize: 14, color: "#cbd5e1", lineHeight: 1.7 }}>
-            Notre mission est de démocratiser l'accès à la puissance de calcul ultime. Nous sélectionnons rigoureusement les meilleurs processeurs, cartes graphiques et puces mémoire du marché pour assembler des machines capables de dompter les jeux les plus gourmands et les tâches de rendu professionnel les plus lourdes.
-          </p>
-        </section>
-
-        {/* Commitment to Elite Configurations */}
-        <section style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: "#f8fafc", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ color: "#00e5ff" }}>🛡️</span> Configurations d'Élite
-          </h2>
-          <p style={{ fontSize: 14, color: "#cbd5e1", lineHeight: 1.7 }}>
-            Chaque machine assemblée chez Elite PC fait l'objet de tests de stabilité thermique poussés. Nous n'utilisons que des composants de marques certifiées (Intel, AMD, NVIDIA, Corsair, Samsung, G.Skill, NZXT) afin de garantir une fiabilité sur le long terme et d'éviter tout goulot d'étranglement. Nos experts soignent le câblage (cable management) pour optimiser l'airflow et l'esthétique de votre setup.
-          </p>
-        </section>
-
-        {/* Shipping & Assembly Guarantees */}
-        <section style={{ marginBottom: 10 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: "#f8fafc", marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ color: "#00e5ff" }}>📦</span> Garanties d'Assemblage & Livraison
-          </h2>
-          <p style={{ fontSize: 14, color: "#cbd5e1", lineHeight: 1.7, marginBottom: 14 }}>
-            - **Garantie Constructeur de 3 Ans** : Toutes nos configurations et pièces bénéficient d'un support premium d'Elite PC Care.
-            <br />
-            - **Livraison Sécurisée Blindée** : Nos ordinateurs sont expédiés dans des emballages renforcés doubles cartons contenant des mousses expansées moulées sur mesure pour protéger la carte graphique et le système de refroidissement liquide pendant le transport.
-            <br />
-            - **Support 24/7** : Notre Assistant Intelligent Elite PC et nos techniciens dédiés se tiennent prêts à vous guider dans toutes vos étapes de mise en route ou de diagnostic.
-          </p>
-        </section>
-      </div>
-    </div>
+      <section className="simple-callout">
+        <div>
+          <span className="store-eyebrow">Une question avant de choisir ?</span>
+          <h2>Elite AI vous aide à comparer le catalogue disponible.</h2>
+          <p>Ouvrez le bouton Elite AI pour demander un conseil matériel ou vérifier une compatibilité.</p>
+        </div>
+        <Link className="button button-secondary" to="/contact">Voir les options d'aide</Link>
+      </section>
+    </main>
   );
 }
