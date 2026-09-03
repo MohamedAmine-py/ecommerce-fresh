@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { login, register } from "../api/client";
 import { useApp } from "../context/AppContext";
+import BrandLogo from "../components/BrandLogo";
 
 function errorMessage(error) {
   const errors = error?.data?.errors;
@@ -11,7 +12,7 @@ function errorMessage(error) {
 
 export default function Auth({ mode }) {
   const isRegister = mode === "register";
-  const { user, handleLogin } = useApp();
+  const { user, handleLogin, darkMode } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ nom: "", email: "", mot_de_passe: "" });
@@ -40,7 +41,7 @@ export default function Auth({ mode }) {
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="auth-title">
         <Link className="auth-brand" to="/" aria-label="Elite PC home">
-          <img src="/pc_logo.png" alt="Elite PC" />
+          <BrandLogo variant={darkMode ? "dark-surface" : "light-surface"} />
         </Link>
         <span className="store-eyebrow">Customer account</span>
         <h1 id="auth-title">{isRegister ? "Create Account" : "Welcome Back"}</h1>

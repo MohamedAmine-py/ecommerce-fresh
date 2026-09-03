@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import BrandLogo from "./BrandLogo";
 import {
   createCategory, createProduct, createUser, deleteCategory, deleteOrder,
   deleteProduct, deleteUser, getCategories, getOrders, getProducts, getStats,
@@ -149,7 +150,7 @@ export default function AdminDashboard({ token, user, onToast }) {
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <div className="admin-brand"><img src="/pc_logo.png" alt="Elite PC" /><span>Admin</span></div>
+        <div className="admin-brand"><BrandLogo variant="dark-surface" /><span>Admin</span></div>
         <nav aria-label="Admin navigation">{tabs.map(([id, label, code]) => <button key={id} className={tab === id ? "is-active" : ""} onClick={() => setTab(id)}><span>{code}</span>{label}</button>)}</nav>
         <Link className="admin-store-link" to="/">← Return to storefront</Link>
       </aside>

@@ -1,15 +1,14 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-
-const LOCAL_IMAGE_FALLBACK = "/pc_logo.png";
+import { applyProductFallback, productImage } from "../utils/productAssets";
 
 function CartItem({ item, updateCartItem, removeFromCart }) {
   const specs = [item.processor, item.graphics_card, item.ram_details, item.storage_details].filter(Boolean).slice(0, 2);
 
   return (
     <article className="cart-page-item">
-      <Link className="cart-page-image" to={`/products/${item.id}`}><img src={item.image || LOCAL_IMAGE_FALLBACK} alt={item.nom} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = LOCAL_IMAGE_FALLBACK; event.currentTarget.classList.add("is-fallback"); }} /></Link>
+      <Link className="cart-page-image" to={`/products/${item.id}`}><img src={productImage(item)} alt={item.nom} loading="lazy" decoding="async" onError={(event) => applyProductFallback(event, item)} /></Link>
       <div className="cart-page-product"><span>{item.categorie?.nom || "Hardware"}</span><Link to={`/products/${item.id}`}>{item.nom}</Link>{specs.length > 0 && <p>{specs.join(" · ")}</p>}<button className="cart-remove" onClick={() => removeFromCart(item.id)}>Retirer</button></div>
       <div className="cart-unit-price"><span>Prix unitaire</span><strong>{Number(item.prix).toFixed(2)} €</strong></div>
       <div className="cart-quantity"><span>Quantité</span><div><button onClick={() => updateCartItem(item.id, item.quantite - 1)} aria-label={`Réduire la quantité de ${item.nom}`}>−</button><strong>{item.quantite}</strong><button onClick={() => updateCartItem(item.id, item.quantite + 1)} aria-label={`Augmenter la quantité de ${item.nom}`}>+</button></div></div>

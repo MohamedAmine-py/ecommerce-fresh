@@ -4,7 +4,8 @@ import { useApp } from "../context/AppContext";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import SupportChat from "./SupportChat";
-import ProductModal, { getProductImage } from "./ProductModal";
+import ProductModal from "./ProductModal";
+import { applyProductFallback, productImage } from "../utils/productAssets";
 import { login as apiLogin, register as apiRegister } from "../api/client";
 
 // Icon Cart for Drawer Empty View
@@ -110,12 +111,11 @@ export default function Layout({ children }) {
                   <div key={item.id} className="cart-item">
                     <div className="cart-thumb">
                       <img
-                        src={item.image || getProductImage(item.nom)}
+                        src={productImage(item)}
                         alt={item.nom}
-                        onError={(e) => {
-                          e.target.src =
-                            "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&h=200&fit=crop";
-                        }}
+                        loading="lazy"
+                        decoding="async"
+                        onError={(event) => applyProductFallback(event, item)}
                       />
                     </div>
                     <div className="cart-info">

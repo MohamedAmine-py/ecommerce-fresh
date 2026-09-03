@@ -3,8 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getProduct } from "../api/client";
 import { useApp } from "../context/AppContext";
 import { StorefrontState } from "../components/StorefrontUI";
-
-const LOCAL_IMAGE_FALLBACK = "/pc_logo.png";
+import { applyProductFallback, productImage } from "../utils/productAssets";
 
 const HeartIcon = ({ filled }) => (
   <svg width="19" height="19" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
@@ -49,7 +48,7 @@ export default function ProductDetails() {
       <nav className="product-breadcrumb" aria-label="Fil d’Ariane"><Link to="/products">Catalogue</Link><span>/</span><span>{product.categorie?.nom || "Hardware"}</span></nav>
       <section className="product-detail-hero">
         <div className="product-detail-media">
-          <img src={product.image || LOCAL_IMAGE_FALLBACK} alt={product.nom} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = LOCAL_IMAGE_FALLBACK; event.currentTarget.classList.add("is-fallback"); }} />
+          <img src={productImage(product)} alt={product.nom} decoding="async" onError={(event) => applyProductFallback(event, product)} />
           <span className={`detail-stock-badge ${isOut ? "is-out" : product.stock <= 5 ? "is-low" : ""}`}>{isOut ? "Rupture de stock" : `${product.stock} en stock`}</span>
         </div>
         <div className="product-detail-summary">

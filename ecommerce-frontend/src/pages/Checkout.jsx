@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { createOrder } from "../api/client";
-
-const LOCAL_IMAGE_FALLBACK = "/pc_logo.png";
+import { applyProductFallback, productImage } from "../utils/productAssets";
 
 export default function Checkout() {
   const { cart, cartTotal, user, token, toast, clearCart, setAuthOpen } = useApp();
@@ -97,7 +96,7 @@ export default function Checkout() {
 
         <aside className="checkout-summary">
           <span className="store-eyebrow">Votre commande</span><h2>Order Summary</h2>
-          <div className="checkout-items">{cart.map((item) => <div className="checkout-item" key={item.id}><img src={item.image || LOCAL_IMAGE_FALLBACK} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = LOCAL_IMAGE_FALLBACK; }} /><div><strong>{item.nom}</strong><span>{item.quantite} × {Number(item.prix).toFixed(2)} €</span></div><b>{(item.quantite * Number(item.prix)).toFixed(2)} €</b></div>)}</div>
+          <div className="checkout-items">{cart.map((item) => <div className="checkout-item" key={item.id}><img src={productImage(item)} alt="" loading="lazy" decoding="async" onError={(event) => applyProductFallback(event, item)} /><div><strong>{item.nom}</strong><span>{item.quantite} × {Number(item.prix).toFixed(2)} €</span></div><b>{(item.quantite * Number(item.prix)).toFixed(2)} €</b></div>)}</div>
           <div className="summary-row"><span>Sous-total estimé</span><strong>{cartTotal.toFixed(2)} €</strong></div>
           <div className="summary-row"><span>Livraison</span><strong>Confirmée à la commande</strong></div>
           <div className="summary-total"><span>Total estimé</span><strong>{cartTotal.toFixed(2)} €</strong></div>

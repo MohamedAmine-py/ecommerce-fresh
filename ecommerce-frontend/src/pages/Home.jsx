@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { getCategories, getProducts } from "../api/client";
 import ProductCard from "../components/ProductCard";
 import { ProductGridSkeleton, SectionHeading, StorefrontState } from "../components/StorefrontUI";
-
-const LOCAL_HARDWARE_FALLBACK = "/pc_logo.png";
+import { applyProductFallback, categoryImage } from "../utils/productAssets";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -23,17 +22,7 @@ export default function Home() {
   }, []);
 
   const featured = products.slice(0, 4);
-  const heroImage = featured.find((product) => product.image)?.image || LOCAL_HARDWARE_FALLBACK;
-
-  const imageForCategory = (category) =>
-    products.find((product) => Number(product.categorie_id) === Number(category.id))?.image ||
-    LOCAL_HARDWARE_FALLBACK;
-
-  const handleCategoryImageError = (event) => {
-    event.currentTarget.onerror = null;
-    event.currentTarget.src = LOCAL_HARDWARE_FALLBACK;
-    event.currentTarget.classList.add("is-fallback");
-  };
+  const heroImage = "/categories/gamer-pcs.webp";
 
   return (
     <>
@@ -63,19 +52,16 @@ export default function Home() {
             </div>
           ) : categories.length > 0 ? (
             <div className="category-grid">
-              {categories.map((category) => (
-                <Link className="category-card" to="/products" key={category.id}>
-                  <img
-                    src={imageForCategory(category)}
-                    alt=""
-                    onError={handleCategoryImageError}
-                    className={imageForCategory(category) === LOCAL_HARDWARE_FALLBACK ? "is-fallback" : ""}
-                  />
+              {categories.map((category) => {
+                const representative = { categorie: category };
+                const image = categoryImage(category);
+                return <Link className="category-card" to="/products" key={category.id}>
+                  <img src={image} alt="" loading="lazy" decoding="async" onError={(event) => applyProductFallback(event, representative)} />
                   <span className="category-card-shade" />
                   <span className="category-name">{category.nom}</span>
                   <span className="category-arrow" aria-hidden="true">↗</span>
                 </Link>
-              ))}
+              })}
             </div>
           ) : null}
         </section>

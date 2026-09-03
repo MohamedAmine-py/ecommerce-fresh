@@ -36,6 +36,11 @@
         .company-info {
             flex: 1;
         }
+        .company-logo {
+            width: 180px;
+            height: auto;
+            margin-bottom: 10px;
+        }
         .company-name {
             font-size: 28px;
             font-weight: 900;
@@ -247,9 +252,7 @@
         <!-- Header -->
         <div class="header">
             <div class="company-info">
-                <div class="company-name">
-                    Elite <span class="company-accent">PC</span>
-                </div>
+                <img class="company-logo" src="{{ public_path('images/elite-pc-logo-light.svg') }}" alt="Elite PC">
                 <div class="company-tagline">Premium Computer Hardware</div>
             </div>
             <div class="invoice-info">

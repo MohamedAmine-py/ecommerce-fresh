@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { downloadInvoice, getOrder } from "../api/client";
 import { useApp } from "../context/AppContext";
-import { getProductImage } from "../components/ProductModal";
 import { StorefrontState } from "../components/StorefrontUI";
+import { applyProductFallback, productImage } from "../utils/productAssets";
 
 const statusLabel = { en_cours: "In progress", validee: "Confirmed", annulee: "Cancelled" };
 const money = (value) => `${Number(value || 0).toFixed(2)} €`;
@@ -44,7 +44,7 @@ export default function OrderDetails() {
       <div className="order-detail-layout">
         <section className="order-items-panel"><h2>Purchased Products</h2><div className="order-items-list">{order.details?.map((detail) => (
           <article className="order-product" key={detail.id}>
-            <img src={detail.produit?.image || getProductImage(detail.produit?.nom)} alt="" onError={(event) => { event.currentTarget.src = "/pc_logo.png"; event.currentTarget.classList.add("is-fallback"); }} />
+            <img src={productImage(detail.produit)} alt="" loading="lazy" decoding="async" onError={(event) => applyProductFallback(event, detail.produit)} />
             <div><strong>{detail.produit?.nom || "Product unavailable"}</strong><span>Quantity: {detail.quantite}</span><span>Unit price: {money(detail.prix_unitaire)}</span></div>
             <b>{money(Number(detail.prix_unitaire) * detail.quantite)}</b>
           </article>

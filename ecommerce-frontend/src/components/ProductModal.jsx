@@ -1,29 +1,9 @@
 import React from 'react';
-
-const PRODUCT_IMAGES = {
-  "RTX": "https://images.unsplash.com/photo-1678129712036-f0fec2679dc6?w=800&h=800&fit=crop",
-  "Intel": "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=800&h=800&fit=crop",
-  "AMD": "https://images.unsplash.com/photo-1628557044797-f21a177c37ec?w=800&h=800&fit=crop",
-  "Corsair": "https://images.unsplash.com/photo-1563158114-e4f6479612c6?w=800&h=800&fit=crop",
-  "Logitech": "https://images.unsplash.com/photo-1615663245857-ac93bb7c3c9c?w=800&h=800&fit=crop",
-  "SteelSeries": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&h=800&fit=crop",
-  "NZXT": "https://images.unsplash.com/photo-1555617781-db2d2e1ebc12?w=800&h=800&fit=crop",
-  "Desktop": "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=800&h=800&fit=crop",
-  "System": "https://images.unsplash.com/photo-1605648812678-8311a2f9cb24?w=800&h=800&fit=crop",
-  "Workstation": "https://images.unsplash.com/photo-1547394765-185e1e68f34e?w=800&h=800&fit=crop",
-  "default": "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=800&h=800&fit=crop"
-};
-
-export function getProductImage(name = "") {
-  for (const [key, url] of Object.entries(PRODUCT_IMAGES)) {
-    if (name.toLowerCase().includes(key.toLowerCase())) return url;
-  }
-  return PRODUCT_IMAGES.default;
-}
+import { applyProductFallback, productImage } from '../utils/productAssets';
 
 export default function ProductModal({ product, onClose, onAddToCart }) {
   if (!product) return null;
-  const img = product.image || getProductImage(product.nom);
+  const img = productImage(product);
   const isOut = product.stock === 0;
   const isLimited = !isOut && product.stock <= 5;
 
@@ -52,8 +32,9 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
           <img
             src={img}
             alt={product.nom}
-            onError={e => { e.target.src = PRODUCT_IMAGES.default; }}
-            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.9 }}
+            onError={event => applyProductFallback(event, product)}
+            decoding="async"
+            style={{ width: "100%", height: "100%", objectFit: "contain", opacity: 0.9 }}
           />
           {isOut && (
             <div style={{ position: "absolute", top: 16, left: 16, background: "#ef4444", color: "#fff", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 800 }}>SOLD OUT</div>

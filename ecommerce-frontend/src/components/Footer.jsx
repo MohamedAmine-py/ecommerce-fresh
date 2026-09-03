@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import BrandLogo from "./BrandLogo";
 
 export default function Footer() {
   return (
@@ -7,7 +8,7 @@ export default function Footer() {
       <div className="footer-inner">
         <div className="footer-grid">
           <div className="footer-brand">
-            <Link className="footer-logo" to="/"><img src="/pc_logo.png" alt="Elite PC" /></Link>
+            <Link className="footer-logo" to="/" aria-label="Elite PC home"><BrandLogo variant="dark-surface" /></Link>
             <p>Matériel et systèmes PC haute performance, réunis dans une expérience claire et exigeante.</p>
           </div>
           <div className="footer-col">
