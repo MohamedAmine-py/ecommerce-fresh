@@ -116,3 +116,62 @@
   .admin-field:has(textarea), .admin-checkbox { grid-column: auto; }
   .admin-modal-overlay { padding: 10px; }.admin-modal { max-height: calc(100vh - 20px); }
 }
+
+/* Semantic light theme for the shared Admin workspace. */
+body:not(.dark) .admin-shell { background: var(--page-bg); color: var(--text-primary); }
+body:not(.dark) .admin-sidebar { border-color: var(--border-color); background: #15202a; }
+body:not(.dark) .admin-brand,
+body:not(.dark) .admin-store-link { border-color: rgba(255,255,255,.12); }
+body:not(.dark) .admin-sidebar nav button { color: #b8c3cc; }
+body:not(.dark) .admin-sidebar nav button:hover { background: #202e39; color: #fff; }
+body:not(.dark) .admin-sidebar nav button.is-active { border-color: #41515e; background: #263642; color: #fff; }
+body:not(.dark) .admin-workspace { background: var(--page-bg); }
+body:not(.dark) .admin-topbar { border-color: var(--border-color); background: var(--surface-elevated); }
+body:not(.dark) .admin-topbar div span,
+body:not(.dark) .admin-page-heading p,
+body:not(.dark) .admin-count,
+body:not(.dark) .admin-stat p,
+body:not(.dark) .admin-table td small,
+body:not(.dark) .admin-order-detail dt,
+body:not(.dark) .admin-state p,
+body:not(.dark) .admin-field > span { color: var(--text-muted); }
+body:not(.dark) .admin-page-heading h1,
+body:not(.dark) .admin-stat strong,
+body:not(.dark) .admin-table td strong,
+body:not(.dark) .admin-price,
+body:not(.dark) .admin-order-detail h3,
+body:not(.dark) .admin-order-line strong,
+body:not(.dark) .admin-modal > header h2 { color: var(--text-primary) !important; }
+body:not(.dark) .admin-count,
+body:not(.dark) .admin-stat,
+body:not(.dark) .admin-panel,
+body:not(.dark) .admin-state,
+body:not(.dark) .admin-modal { border-color: var(--border-color); background: var(--surface-elevated); }
+body:not(.dark) .admin-panel-title,
+body:not(.dark) .admin-table th,
+body:not(.dark) .admin-table td,
+body:not(.dark) .admin-order-line,
+body:not(.dark) .admin-modal > header,
+body:not(.dark) .admin-modal > footer { border-color: var(--border-color); }
+body:not(.dark) .admin-table th,
+body:not(.dark) .admin-modal > footer { background: var(--surface-muted); color: var(--text-secondary); }
+body:not(.dark) .admin-table td,
+body:not(.dark) .admin-order-detail dd,
+body:not(.dark) .admin-checkbox { color: var(--text-secondary); }
+body:not(.dark) .admin-table tbody > tr:not(.admin-order-detail-row):hover { background: var(--surface-card); }
+body:not(.dark) .admin-order-detail-row > td { background: var(--surface-card); }
+body:not(.dark) .admin-primary { color: var(--accent-contrast); }
+body:not(.dark) .admin-secondary,
+body:not(.dark) .admin-actions button,
+body:not(.dark) .admin-modal > header button { border-color: var(--border-strong); background: var(--surface-muted); color: var(--text-secondary); }
+body:not(.dark) .admin-status-select,
+body:not(.dark) .admin-field input,
+body:not(.dark) .admin-field textarea,
+body:not(.dark) .admin-field select { border-color: var(--border-strong); background: var(--input-bg); color: var(--text-primary); }
+body:not(.dark) .admin-modal-overlay { background: rgba(16,24,32,.35); }
+body:not(.dark) .admin-stock.is-low,
+body:not(.dark) .admin-status.is-en_cours,
+body:not(.dark) .admin-status-select.is-en_cours { color: var(--warning); }
+body:not(.dark) .admin-stock.is-out,
+body:not(.dark) .admin-status.is-annulee,
+body:not(.dark) .admin-actions button.is-danger { color: var(--danger); }
