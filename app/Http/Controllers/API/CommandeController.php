@@ -245,12 +245,10 @@ class CommandeController extends Controller
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        // Generate PDF
+        // Generate a print-ready A4 invoice from the authoritative stored order.
         $pdf = Pdf::loadView('invoices.invoice', [
             'commande' => $commande,
-            'company_name' => 'Elite PC',
-            'company_logo' => asset('images/logo.png'),
-        ]);
+        ])->setPaper('a4');
 
         return $pdf->download("Invoice-{$commande->id}.pdf");
     }
