@@ -12,8 +12,8 @@ export default function Admin() {
   }
 
   return (
-    <div style={{ paddingTop: 40 }}>
-      <AdminDashboard token={token} onToast={toast} />
+    <div className="admin-page">
+      <AdminDashboard token={token} user={user} onToast={toast} />
     </div>
   );
 }

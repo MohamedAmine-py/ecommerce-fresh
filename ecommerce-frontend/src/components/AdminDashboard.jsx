@@ -1,13 +1,30 @@
-import { useState, useEffect } from "react";
-import { getStats, getUsers, getOrders, getProducts, getCategories, createProduct, updateProduct, deleteProduct, updateOrderStatus, createUser, updateUser, deleteUser, deleteOrder, createCategory, updateCategory, deleteCategory } from "../api/client";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  createCategory, createProduct, createUser, deleteCategory, deleteOrder,
+  deleteProduct, deleteUser, getCategories, getOrders, getProducts, getStats,
+  getUsers, updateCategory, updateOrderStatus, updateProduct, updateUser,
+} from "../api/client";
+import "../styles/AdminDashboard.css";
 
-const IconUsers = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
-const IconPackage = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>;
-const IconCart = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>;
-const IconClock = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>;
-const IconDollar = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>;
+const tabs = [
+  ["overview", "Overview", "OV"], ["products", "Products", "PR"],
+  ["categories", "Categories", "CA"], ["orders", "Orders", "OR"],
+  ["users", "Users", "US"],
+];
+const statusLabels = { en_cours: "In progress", validee: "Confirmed", annulee: "Cancelled" };
+const blankProduct = { nom: "", prix: "", stock: "", categorie_id: "", description: "", image: "", brand: "", processor: "", graphics_card: "", ram_details: "", storage_details: "", is_custom_build: false };
+const blankCategory = { nom: "", description: "" };
+const blankUser = { nom: "", email: "", mot_de_passe: "", role: "client" };
+const money = (value) => `${Number(value || 0).toFixed(2)} €`;
+const date = (value) => new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 
-export default function AdminDashboard({ token, onToast }) {
+function requestMessage(error) {
+  const errors = error?.data?.errors;
+  return errors ? Object.values(errors).flat().join(" ") : error?.data?.message || error?.message || "The request could not be completed.";
+}
+
+export default function AdminDashboard({ token, user, onToast }) {
   const [tab, setTab] = useState("overview");
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
@@ -15,405 +32,170 @@ export default function AdminDashboard({ token, onToast }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Form states
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [editProduct, setEditProduct] = useState(null);
-  const [prodForm, setProdForm] = useState({ nom: "", prix: "", stock: "", categorie_id: "", description: "", image: "" });
-
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [editCategory, setEditCategory] = useState(null);
-  const [catForm, setCatForm] = useState({ nom: "", description: "" });
-
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [editUser, setEditUser] = useState(null);
-  const [userForm, setUserForm] = useState({ nom: "", email: "", mot_de_passe: "", role: "client" });
-
+  const [loadError, setLoadError] = useState("");
+  const [modal, setModal] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [productForm, setProductForm] = useState(blankProduct);
+  const [categoryForm, setCategoryForm] = useState(blankCategory);
+  const [userForm, setUserForm] = useState(blankUser);
   const [actionLoading, setActionLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
-  useEffect(() => {
-    loadData();
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [statsResponse, usersResponse, ordersResponse, productsResponse, categoriesResponse] = await Promise.all([
+        getStats(token), getUsers(token), getOrders(token), getProducts(), getCategories(),
+      ]);
+      setStats(statsResponse);
+      setUsers(Array.isArray(usersResponse) ? usersResponse : []);
+      setOrders(Array.isArray(ordersResponse) ? ordersResponse : []);
+      setProducts(productsResponse?.data || []);
+      setCategories(Array.isArray(categoriesResponse) ? categoriesResponse : []);
+    } catch (error) {
+      setLoadError(requestMessage(error));
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
 
-  async function loadData() {
-    setLoading(true);
+  useEffect(() => {
+    const request = Promise.resolve().then(loadData);
+    return () => { void request; };
+  }, [loadData]);
+
+  const pageMeta = useMemo(() => ({
+    overview: ["Dashboard", "A current overview of the Elite PC store."],
+    products: ["Products", "Manage catalog information, pricing, stock, and specifications."],
+    categories: ["Categories", "Organize the product catalog using the existing categories."],
+    orders: ["Orders", "Review customer orders and manage their current status."],
+    users: ["Users", "Manage customer and administrator accounts."],
+  })[tab], [tab]);
+
+  const mutate = async (operation, success, after) => {
+    setActionLoading(true);
     try {
-      const [s, u, o, p, c] = await Promise.all([getStats(token), getUsers(token), getOrders(token), getProducts(), getCategories()]);
-      setStats(s); setUsers(Array.isArray(u) ? u : []); setOrders(Array.isArray(o) ? o : []);
-      setProducts(p.data || []); setCategories(Array.isArray(c) ? c : []);
-    } catch (e) {
-      console.error(e);
+      await operation();
+      if (after) after();
+      await loadData();
+      onToast(success);
+    } catch (error) {
+      onToast(requestMessage(error), "error");
+    } finally {
+      setActionLoading(false);
+      setDeletingId(null);
     }
-    setLoading(false);
-  }
+  };
 
-  // --- PRODUCTS ---
-  function openAddProduct() { setProdForm({ nom: "", prix: "", stock: "", categorie_id: categories[0]?.id || "", description: "", image: "" }); setEditProduct(null); setShowProductModal(true); }
-  function openEditProduct(p) { setProdForm({ nom: p.nom, prix: p.prix, stock: p.stock, categorie_id: p.categorie_id, description: p.description || "", image: p.image || "" }); setEditProduct(p); setShowProductModal(true); }
+  const openProduct = (product = null) => {
+    setEditing(product);
+    setProductForm(product ? { ...blankProduct, ...product, categorie_id: product.categorie_id || "", is_custom_build: Boolean(product.is_custom_build) } : { ...blankProduct, categorie_id: categories[0]?.id || "" });
+    setModal("product");
+  };
+  const openCategory = (category = null) => { setEditing(category); setCategoryForm(category ? { nom: category.nom, description: category.description || "" } : blankCategory); setModal("category"); };
+  const openUser = (account = null) => { setEditing(account); setUserForm(account ? { nom: account.nom, email: account.email, mot_de_passe: "", role: account.role } : blankUser); setModal("user"); };
 
-  async function handleSaveProduct() {
-    setActionLoading(true);
-    const res = await (editProduct ? updateProduct(editProduct.id, prodForm, token) : createProduct(prodForm, token));
-    setActionLoading(false);
-    if (res.id) { setShowProductModal(false); loadData(); onToast(editProduct ? "Produit modifié ✓" : "Produit créé ✓"); }
-    else onToast(res.message || "Erreur", "error");
-  }
-
-  async function handleDeleteProduct(id) {
-    if (!window.confirm("Supprimer ce produit ?")) return;
-    setDeletingId(id); await deleteProduct(id, token); setDeletingId(null); loadData(); onToast("Produit supprimé");
-  }
-
-  // --- CATEGORIES ---
-  function openAddCategory() { setCatForm({ nom: "", description: "" }); setEditCategory(null); setShowCategoryModal(true); }
-  function openEditCategory(c) { setCatForm({ nom: c.nom, description: c.description || "" }); setEditCategory(c); setShowCategoryModal(true); }
-
-  async function handleSaveCategory() {
-    setActionLoading(true);
-    const res = await (editCategory ? updateCategory(editCategory.id, catForm, token) : createCategory(catForm, token));
-    setActionLoading(false);
-    if (res.id) { setShowCategoryModal(false); loadData(); onToast(editCategory ? "Catégorie modifiée ✓" : "Catégorie créée ✓"); }
-    else onToast(res.message || "Erreur", "error");
-  }
-
-  async function handleDeleteCategory(id) {
-    if (!window.confirm("Supprimer cette catégorie ? (Attention, cela peut affecter les produits liés)")) return;
-    setDeletingId(id); await deleteCategory(id, token); setDeletingId(null); loadData(); onToast("Catégorie supprimée");
-  }
-
-  // --- USERS ---
-  function openAddUser() { setUserForm({ nom: "", email: "", mot_de_passe: "", role: "client" }); setEditUser(null); setShowUserModal(true); }
-  function openEditUser(u) { setUserForm({ nom: u.nom, email: u.email, mot_de_passe: "", role: u.role }); setEditUser(u); setShowUserModal(true); }
-
-  async function handleSaveUser() {
-    setActionLoading(true);
-    const dataToSend = { ...userForm };
-    if (editUser && !dataToSend.mot_de_passe) delete dataToSend.mot_de_passe; // Don't update password if empty
-    
-    const res = await (editUser ? updateUser(editUser.id, dataToSend, token) : createUser(dataToSend, token));
-    setActionLoading(false);
-    if (res.id) { setShowUserModal(false); loadData(); onToast(editUser ? "Utilisateur modifié ✓" : "Utilisateur créé ✓"); }
-    else onToast(res.message || "Erreur", "error");
-  }
-
-  async function handleDeleteUser(id) {
-    if (!window.confirm("Supprimer cet utilisateur ?")) return;
-    setDeletingId(id); await deleteUser(id, token); setDeletingId(null); loadData(); onToast("Utilisateur supprimé");
-  }
-
-  // --- ORDERS ---
-  async function handleOrderStatus(id, statut) {
-    await updateOrderStatus(id, statut, token); loadData(); onToast("Statut mis à jour ✓");
-  }
-
-  async function handleDeleteOrder(id) {
-    if (!window.confirm("Supprimer cette commande de façon permanente ?")) return;
-    setDeletingId(id); await deleteOrder(id, token); setDeletingId(null); loadData(); onToast("Commande supprimée");
-  }
-
-  const statusColors = { en_cours: "#f59e0b", validee: "#22c55e", annulee: "#ef4444" };
-  const statusLabels = { en_cours: "En cours", validee: "Validée", annulee: "Annulée" };
-
-  if (loading && !stats) return <div style={{ padding: "60px 0", textAlign: "center", color: "#64748b" }}>Chargement du dashboard...</div>;
+  const saveProduct = () => mutate(
+    () => editing ? updateProduct(editing.id, productForm, token) : createProduct(productForm, token),
+    editing ? "Product updated" : "Product created", () => setModal(null),
+  );
+  const saveCategory = () => mutate(
+    () => editing ? updateCategory(editing.id, categoryForm, token) : createCategory(categoryForm, token),
+    editing ? "Category updated" : "Category created", () => setModal(null),
+  );
+  const saveUser = () => {
+    const payload = { ...userForm };
+    if (editing && !payload.mot_de_passe) delete payload.mot_de_passe;
+    return mutate(() => editing ? updateUser(editing.id, payload, token) : createUser(payload, token), editing ? "User updated" : "User created", () => setModal(null));
+  };
+  const remove = (kind, id) => {
+    const labels = { product: "product", category: "category", order: "order", user: "user" };
+    const warnings = { category: "Deleting this category may affect related products.", order: "Deleting an order is permanent. Existing stock-safety rules will be applied." };
+    if (!window.confirm(`${warnings[kind] || `Delete this ${labels[kind]}?`}${warnings[kind] ? " Continue?" : ""}`)) return;
+    const calls = { product: deleteProduct, category: deleteCategory, order: deleteOrder, user: deleteUser };
+    setDeletingId(`${kind}-${id}`);
+    mutate(() => calls[kind](id, token), `${labels[kind][0].toUpperCase()}${labels[kind].slice(1)} deleted`);
+  };
+  const changeOrderStatus = (id, statut) => mutate(() => updateOrderStatus(id, statut, token), "Order status updated");
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 30, fontWeight: 900, letterSpacing: -1, color: "var(--text)", marginBottom: 4 }}>Admin Dashboard</h1>
-          <p style={{ color: "var(--text2)", fontSize: 14 }}>Gestion complète de la boutique TechElite</p>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {[
-            { id: "overview", label: "Vue d'ensemble" },
-            { id: "products", label: "Produits" },
-            { id: "categories", label: "Catégories" },
-            { id: "orders", label: "Commandes" },
-            { id: "users", label: "Utilisateurs" }
-          ].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "9px 18px", borderRadius: 10, border: "none", fontFamily: "Inter,sans-serif", fontSize: 13, fontWeight: 700, cursor: "pointer", background: tab === t.id ? "var(--accent)" : "var(--bg3)", color: tab === t.id ? "#0f172a" : "var(--text2)", transition: "all 0.2s" }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="admin-brand"><img src="/pc_logo.png" alt="Elite PC" /><span>Admin</span></div>
+        <nav aria-label="Admin navigation">{tabs.map(([id, label, code]) => <button key={id} className={tab === id ? "is-active" : ""} onClick={() => setTab(id)}><span>{code}</span>{label}</button>)}</nav>
+        <Link className="admin-store-link" to="/">← Return to storefront</Link>
+      </aside>
 
-      {/* OVERVIEW TAB */}
-      {tab === "overview" && stats && (
-        <div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 20, marginBottom: 36 }}>
-            {[
-              { label: "Clients", val: stats.total_users, icon: <IconUsers />, color: "#3b82f6" },
-              { label: "Produits", val: stats.total_produits, icon: <IconPackage />, color: "#8b5cf6" },
-              { label: "Commandes", val: stats.total_commandes, icon: <IconCart />, color: "#f59e0b" },
-              { label: "En cours", val: stats.commandes_en_cours, icon: <IconClock />, color: "#ef4444" },
-              { label: "Revenus", val: `${parseFloat(stats.revenus_total||0).toFixed(2)} €`, icon: <IconDollar />, color: "#22c55e" },
-            ].map(c => (
-              <div key={c.label} style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 20px", boxShadow: "var(--shadow)" }}>
-                <div style={{ color: c.color, marginBottom: 16 }}>{c.icon}</div>
-                <div style={{ fontSize: 26, fontWeight: 900, color: "var(--text)", marginBottom: 4, fontFamily: "JetBrains Mono,monospace" }}>{c.val}</div>
-                <div style={{ fontSize: 13, color: "var(--text3)", fontWeight: 600 }}>{c.label}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 16, padding: 24, boxShadow: "var(--shadow)" }}>
-            <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 20, color: "var(--text)" }}>Dernières commandes</div>
-            <AdminTable headers={["#","Client","Total","Statut","Date"]}>
-              {(stats.recent_orders||[]).map(o => (
-                <tr key={o.id}>
-                  <td style={{ color: "var(--text)" }}>#{o.id}</td>
-                  <td style={{ color: "var(--text)" }}>{o.user?.nom || "—"}</td>
-                  <td style={{ fontFamily: "JetBrains Mono,monospace", fontWeight: 700, color: "var(--text)" }}>{parseFloat(o.total).toFixed(2)} €</td>
-                  <td><span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, background: statusColors[o.statut] + "20", color: statusColors[o.statut] }}>{statusLabels[o.statut]}</span></td>
-                  <td style={{ color: "var(--text3)" }}>{new Date(o.created_at).toLocaleDateString("fr-FR")}</td>
-                </tr>
-              ))}
-            </AdminTable>
-          </div>
-        </div>
-      )}
+      <section className="admin-workspace">
+        <div className="admin-topbar"><div><strong>{user.nom}</strong><span>{user.email}</span></div><span className="admin-role">Admin</span></div>
+        <header className="admin-page-heading"><div><span>Elite PC management</span><h1>{pageMeta[0]}</h1><p>{pageMeta[1]}</p></div>{tab !== "overview" && <span className="admin-count">{({ products, categories, orders, users })[tab].length} records</span>}</header>
 
-      {/* PRODUCTS TAB */}
-      {tab === "products" && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>{products.length} produits</div>
-            <button onClick={openAddProduct} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: "var(--accent)", color: "#0f172a", fontFamily: "Inter,sans-serif", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>+ Nouveau produit</button>
-          </div>
-          <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
-            <AdminTable headers={["Nom","Catégorie","Prix","Stock","Actions"]}>
-              {products.map(p => (
-                <tr key={p.id}>
-                  <td style={{ fontWeight: 600, color: "var(--text)" }}>{p.nom}</td>
-                  <td style={{ color: "var(--text2)" }}>{p.categorie?.nom || "—"}</td>
-                  <td style={{ fontFamily: "JetBrains Mono,monospace", fontWeight: 700, color: "var(--accent)" }}>{parseFloat(p.prix).toFixed(2)} €</td>
-                  <td><span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, background: p.stock === 0 ? "#fee2e2" : p.stock <= 5 ? "#fef3c7" : "#dcfce7", color: p.stock === 0 ? "#ef4444" : p.stock <= 5 ? "#f59e0b" : "#16a34a" }}>{p.stock}</span></td>
-                  <td>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => openEditProduct(p)} className="action-btn edit-btn">Modifier</button>
-                      <button onClick={() => handleDeleteProduct(p.id)} disabled={deletingId === p.id} className="action-btn delete-btn">{deletingId === p.id ? "..." : "Supprimer"}</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </AdminTable>
-          </div>
-        </div>
-      )}
+        {loading && !stats ? <AdminState title="Loading Admin" message="Retrieving current store data…" />
+          : loadError ? <AdminState title="Admin data unavailable" message={loadError} action="Retry" onAction={loadData} />
+          : <>
+            {tab === "overview" && <Overview stats={stats} />}
+            {tab === "products" && <Products products={products} onAdd={() => openProduct()} onEdit={openProduct} onDelete={(id) => remove("product", id)} deletingId={deletingId} />}
+            {tab === "categories" && <Categories categories={categories} onAdd={() => openCategory()} onEdit={openCategory} onDelete={(id) => remove("category", id)} deletingId={deletingId} />}
+            {tab === "orders" && <Orders orders={orders} expandedOrder={expandedOrder} setExpandedOrder={setExpandedOrder} onStatus={changeOrderStatus} onDelete={(id) => remove("order", id)} deletingId={deletingId} actionLoading={actionLoading} />}
+            {tab === "users" && <Users users={users} onAdd={() => openUser()} onEdit={openUser} onDelete={(id) => remove("user", id)} deletingId={deletingId} />}
+          </>}
+      </section>
 
-      {/* CATEGORIES TAB */}
-      {tab === "categories" && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>{categories.length} catégories</div>
-            <button onClick={openAddCategory} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: "var(--accent)", color: "#0f172a", fontFamily: "Inter,sans-serif", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>+ Nouvelle catégorie</button>
-          </div>
-          <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
-            <AdminTable headers={["ID","Nom","Description","Actions"]}>
-              {categories.map(c => (
-                <tr key={c.id}>
-                  <td style={{ color: "var(--text3)" }}>#{c.id}</td>
-                  <td style={{ fontWeight: 600, color: "var(--text)" }}>{c.nom}</td>
-                  <td style={{ color: "var(--text2)" }}>{c.description || "—"}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => openEditCategory(c)} className="action-btn edit-btn">Modifier</button>
-                      <button onClick={() => handleDeleteCategory(c.id)} disabled={deletingId === c.id} className="action-btn delete-btn">{deletingId === c.id ? "..." : "Supprimer"}</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </AdminTable>
-          </div>
-        </div>
-      )}
-
-      {/* ORDERS TAB */}
-      {tab === "orders" && (
-        <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
-          <AdminTable headers={["#","Client","Total","Articles","Statut","Date","Actions"]}>
-            {orders.map(o => (
-              <tr key={o.id}>
-                <td style={{ fontWeight: 700, color: "var(--text)" }}>#{o.id}</td>
-                <td><span style={{ color: "var(--text)" }}>{o.user?.nom || "—"}</span><div style={{ fontSize: 11, color: "var(--text3)" }}>{o.user?.email}</div></td>
-                <td style={{ fontFamily: "JetBrains Mono,monospace", fontWeight: 700, color: "var(--text)" }}>{parseFloat(o.total).toFixed(2)} €</td>
-                <td style={{ color: "var(--text2)" }}>{o.details?.length || 0} art.</td>
-                <td>
-                  <select value={o.statut} onChange={e => handleOrderStatus(o.id, e.target.value)}
-                    style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", background: statusColors[o.statut] + "15", color: statusColors[o.statut], fontSize: 12, fontWeight: 700, cursor: "pointer", outline: "none" }}>
-                    <option value="en_cours">En cours</option>
-                    <option value="validee">Validée</option>
-                    <option value="annulee">Annulée</option>
-                  </select>
-                </td>
-                <td style={{ color: "var(--text3)", fontSize: 13 }}>{new Date(o.created_at).toLocaleDateString("fr-FR")}</td>
-                <td>
-                  <button onClick={() => handleDeleteOrder(o.id)} disabled={deletingId === o.id} className="action-btn delete-btn">{deletingId === o.id ? "..." : "Supprimer"}</button>
-                </td>
-              </tr>
-            ))}
-          </AdminTable>
-        </div>
-      )}
-
-      {/* USERS TAB */}
-      {tab === "users" && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text)" }}>{users.length} utilisateurs</div>
-            <button onClick={openAddUser} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: "var(--accent)", color: "#0f172a", fontFamily: "Inter,sans-serif", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>+ Nouvel utilisateur</button>
-          </div>
-          <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
-            <AdminTable headers={["Nom","Email","Rôle","Commandes","Inscrit le","Actions"]}>
-              {users.map(u => (
-                <tr key={u.id}>
-                  <td style={{ fontWeight: 600, color: "var(--text)" }}>{u.nom}</td>
-                  <td style={{ color: "var(--text2)" }}>{u.email}</td>
-                  <td><span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, background: u.role === "admin" ? "#fee2e2" : "var(--bg3)", color: u.role === "admin" ? "#ef4444" : "var(--text)", textTransform: "uppercase" }}>{u.role}</span></td>
-                  <td style={{ fontWeight: 700, fontFamily: "JetBrains Mono,monospace", color: "var(--text)" }}>{u.commandes_count || 0}</td>
-                  <td style={{ color: "var(--text3)", fontSize: 13 }}>{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => openEditUser(u)} className="action-btn edit-btn">Modifier</button>
-                      <button onClick={() => handleDeleteUser(u.id)} disabled={deletingId === u.id} className="action-btn delete-btn">{deletingId === u.id ? "..." : "Supprimer"}</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </AdminTable>
-          </div>
-        </div>
-      )}
-
-      {/* --- MODALS --- */}
-      
-      {/* Product Modal */}
-      {showProductModal && (
-        <Modal title={editProduct ? "Modifier le produit" : "Nouveau produit"} onClose={() => setShowProductModal(false)} onSave={handleSaveProduct} loading={actionLoading} saveText={editProduct ? "Enregistrer" : "Créer le produit"}>
-          {[
-            { key: "nom", label: "Nom du produit", ph: "Ex: iPhone 16 Pro" },
-            { key: "prix", label: "Prix (€)", ph: "Ex: 999.99", type: "number" },
-            { key: "stock", label: "Stock", ph: "Ex: 50", type: "number" },
-            { key: "image", label: "URL Image", ph: "https://..." },
-            { key: "description", label: "Description", ph: "Description du produit...", isTextArea: true },
-          ].map(f => (
-            <div key={f.key} style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>{f.label}</label>
-              {f.isTextArea
-                ? <textarea value={prodForm[f.key]} onChange={e => setProdForm({...prodForm,[f.key]:e.target.value})} placeholder={f.ph} rows={3} style={inputStyle} />
-                : <input type={f.type||"text"} value={prodForm[f.key]} onChange={e => setProdForm({...prodForm,[f.key]:e.target.value})} placeholder={f.ph} style={inputStyle} />
-              }
-            </div>
-          ))}
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>Catégorie</label>
-            <select value={prodForm.categorie_id} onChange={e => setProdForm({...prodForm,categorie_id:e.target.value})} style={inputStyle}>
-              <option value="">Sélectionnez une catégorie</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
-            </select>
-          </div>
-        </Modal>
-      )}
-
-      {/* Category Modal */}
-      {showCategoryModal && (
-        <Modal title={editCategory ? "Modifier la catégorie" : "Nouvelle catégorie"} onClose={() => setShowCategoryModal(false)} onSave={handleSaveCategory} loading={actionLoading} saveText={editCategory ? "Enregistrer" : "Créer la catégorie"}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Nom de la catégorie</label>
-            <input type="text" value={catForm.nom} onChange={e => setCatForm({...catForm,nom:e.target.value})} placeholder="Ex: Smartphones" style={inputStyle} />
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>Description</label>
-            <textarea value={catForm.description} onChange={e => setCatForm({...catForm,description:e.target.value})} placeholder="Description de la catégorie..." rows={3} style={inputStyle} />
-          </div>
-        </Modal>
-      )}
-
-      {/* User Modal */}
-      {showUserModal && (
-        <Modal title={editUser ? "Modifier l'utilisateur" : "Nouvel utilisateur"} onClose={() => setShowUserModal(false)} onSave={handleSaveUser} loading={actionLoading} saveText={editUser ? "Enregistrer" : "Créer l'utilisateur"}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Nom complet</label>
-            <input type="text" value={userForm.nom} onChange={e => setUserForm({...userForm,nom:e.target.value})} placeholder="Ex: Jean Dupont" style={inputStyle} />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Email</label>
-            <input type="email" value={userForm.email} onChange={e => setUserForm({...userForm,email:e.target.value})} placeholder="Ex: jean@example.com" style={inputStyle} />
-          </div>
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Mot de passe {editUser && <span style={{ textTransform: "none", fontWeight: "normal", color: "var(--text3)" }}>(Laisser vide pour ne pas modifier)</span>}</label>
-            <input type="password" value={userForm.mot_de_passe} onChange={e => setUserForm({...userForm,mot_de_passe:e.target.value})} placeholder="••••••••" style={inputStyle} />
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>Rôle</label>
-            <select value={userForm.role} onChange={e => setUserForm({...userForm,role:e.target.value})} style={inputStyle}>
-              <option value="client">Client</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-        </Modal>
-      )}
-      
-      {/* Styles inline for component specific things */}
-      <style>{`
-        .action-btn { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: Inter,sans-serif; }
-        .edit-btn { border: 1px solid var(--border); background: var(--bg3); color: var(--text2); }
-        .edit-btn:hover { background: var(--bg4); }
-        .delete-btn { border: 1px solid #fecaca; background: #fee2e2; color: #ef4444; }
-        .delete-btn:hover { background: #fca5a5; }
-      `}</style>
+      {modal === "product" && <ProductModal editing={editing} form={productForm} setForm={setProductForm} categories={categories} onClose={() => setModal(null)} onSave={saveProduct} loading={actionLoading} />}
+      {modal === "category" && <CategoryModal editing={editing} form={categoryForm} setForm={setCategoryForm} onClose={() => setModal(null)} onSave={saveCategory} loading={actionLoading} />}
+      {modal === "user" && <UserModal editing={editing} form={userForm} setForm={setUserForm} onClose={() => setModal(null)} onSave={saveUser} loading={actionLoading} />}
     </div>
   );
 }
 
-// Reusable Components inside file
-import React from 'react';
-function AdminTable({ headers, children }) {
-  return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ background: "var(--bg3)" }}>
-            {headers.map(h => <th key={h} style={{ padding: "12px 16px", textAlign: h==="Actions"?"right":"left", fontSize: 11, fontWeight: 700, color: "var(--text3)", letterSpacing: "0.08em", textTransform: "uppercase", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>{h}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {/* We wrap children rows to apply alignment for Actions column */}
-          {React.Children.map(children, child => 
-             React.cloneElement(child, {
-               children: React.Children.map(child.props.children, (td, i) => {
-                 if(i === headers.length - 1 && headers[headers.length - 1] === "Actions") {
-                   return React.cloneElement(td, { style: { ...td.props.style, display: "flex", justifyContent: "flex-end" } });
-                 }
-                 return td;
-               })
-             })
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+function Overview({ stats }) {
+  const cards = [["Clients", stats?.total_users], ["Products", stats?.total_produits], ["Orders", stats?.total_commandes], ["In progress", stats?.commandes_en_cours], ["Confirmed revenue", money(stats?.revenus_total)]];
+  return <div className="admin-overview"><div className="admin-stat-grid">{cards.map(([label, value], index) => <article className="admin-stat" key={label}><span>0{index + 1}</span><strong>{value ?? 0}</strong><p>{label}</p></article>)}</div><Panel title="Recent Orders"><AdminTable headers={["Order", "Customer", "Total", "Status", "Date"]}>{(stats?.recent_orders || []).map((order) => <tr key={order.id}><td className="admin-id">#{order.id}</td><td>{order.user?.nom || "—"}</td><td>{money(order.total)}</td><td><Status value={order.statut} /></td><td>{date(order.created_at)}</td></tr>)}</AdminTable></Panel></div>;
 }
 
-// Reusable Modal
-function Modal({ title, onClose, onSave, loading, saveText, children }) {
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(8px)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: "var(--bg2)", borderRadius: 20, width: "100%", maxWidth: 480, padding: 32, boxShadow: "0 24px 64px rgba(0,0,0,0.15)", animation: "scaleIn .2s ease" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{title}</h2>
-          <button onClick={onClose} style={{ background: "var(--bg3)", border: "none", borderRadius: 8, width: 32, height: 32, cursor: "pointer", fontSize: 16, color: "var(--text2)" }}>✕</button>
-        </div>
-        {children}
-        <div style={{ display: "flex", gap: 12 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 12, borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text2)", fontFamily: "Inter,sans-serif", fontWeight: 700, cursor: "pointer" }}>Annuler</button>
-          <button onClick={onSave} disabled={loading} style={{ flex: 2, padding: 12, borderRadius: 10, border: "none", background: "var(--accent)", color: "#0f172a", fontFamily: "Inter,sans-serif", fontWeight: 900, cursor: "pointer", opacity: loading ? 0.7 : 1 }}>{loading ? "Traitement..." : saveText}</button>
-        </div>
-      </div>
-    </div>
-  );
+function Products({ products, onAdd, onEdit, onDelete, deletingId }) {
+  return <Management title={`${products.length} products`} action="New Product" onAction={onAdd}><AdminTable headers={["Product", "Category", "Price", "Stock", "Actions"]}>{products.map((product) => <tr key={product.id}><td><strong>{product.nom}</strong>{product.brand && <small>{product.brand}</small>}</td><td>{product.categorie?.nom || "—"}</td><td className="admin-price">{money(product.prix)}</td><td><Stock value={product.stock} /></td><td><Actions onEdit={() => onEdit(product)} onDelete={() => onDelete(product.id)} deleting={deletingId === `product-${product.id}`} /></td></tr>)}</AdminTable></Management>;
 }
 
-const labelStyle = { display: "block", fontSize: 11, fontWeight: 700, color: "var(--text3)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 };
-const inputStyle = { width: "100%", padding: "10px 14px", border: "1px solid var(--border)", background: "var(--bg2)", borderRadius: 10, fontSize: 14, fontFamily: "Inter,sans-serif", outline: "none", color: "var(--text)", boxSizing: "border-box", resize: "none" };
+function Categories({ categories, onAdd, onEdit, onDelete, deletingId }) {
+  return <Management title={`${categories.length} categories`} action="New Category" onAction={onAdd}><AdminTable headers={["ID", "Category", "Description", "Products", "Actions"]}>{categories.map((category) => <tr key={category.id}><td className="admin-id">#{category.id}</td><td><strong>{category.nom}</strong></td><td className="admin-description">{category.description || "—"}</td><td>{category.produits_count ?? 0}</td><td><Actions onEdit={() => onEdit(category)} onDelete={() => onDelete(category.id)} deleting={deletingId === `category-${category.id}`} /></td></tr>)}</AdminTable></Management>;
+}
+
+function Orders({ orders, expandedOrder, setExpandedOrder, onStatus, onDelete, deletingId, actionLoading }) {
+  if (!orders.length) return <AdminState title="No orders" message="Customer orders will appear here." />;
+  return <Panel><AdminTable headers={["Order", "Customer", "Total", "Items", "Status", "Date", "Actions"]}>{orders.flatMap((order) => {
+    const expanded = expandedOrder === order.id;
+    return [<tr key={order.id}><td className="admin-id">#{order.id}</td><td><strong>{order.user?.nom || "—"}</strong><small>{order.user?.email}</small></td><td className="admin-price">{money(order.total)}</td><td>{order.details?.length || 0}</td><td><select className={`admin-status-select is-${order.statut}`} value={order.statut} disabled={actionLoading} onChange={(event) => onStatus(order.id, event.target.value)}><option value="en_cours">In progress</option><option value="validee">Confirmed</option><option value="annulee">Cancelled</option></select></td><td>{date(order.created_at)}</td><td><div className="admin-actions"><button onClick={() => setExpandedOrder(expanded ? null : order.id)}>{expanded ? "Close" : "Details"}</button><button className="is-danger" onClick={() => onDelete(order.id)} disabled={deletingId === `order-${order.id}`}>{deletingId === `order-${order.id}` ? "…" : "Delete"}</button></div></td></tr>, expanded && <tr className="admin-order-detail-row" key={`${order.id}-details`}><td colSpan="7"><OrderDetail order={order} /></td></tr>];
+  })}</AdminTable></Panel>;
+}
+
+function OrderDetail({ order }) {
+  return <div className="admin-order-detail"><div><h3>Order items</h3>{order.details?.map((detail) => <div className="admin-order-line" key={detail.id}><span>{detail.produit?.nom || "Product unavailable"} × {detail.quantite}</span><strong>{money(Number(detail.prix_unitaire) * detail.quantite)}</strong></div>)}</div><dl><dt>Delivery address</dt><dd>{order.delivery_address || "—"}</dd><dt>Phone</dt><dd>{order.delivery_phone || "—"}</dd><dt>Payment method</dt><dd>{order.payment_method?.replace(/_/g, " ") || "—"}</dd><dt>Order total</dt><dd>{money(order.total)}</dd></dl></div>;
+}
+
+function Users({ users, onAdd, onEdit, onDelete, deletingId }) {
+  return <Management title={`${users.length} users`} action="New User" onAction={onAdd}><AdminTable headers={["Name", "Email", "Role", "Orders", "Joined", "Actions"]}>{users.map((account) => <tr key={account.id}><td><strong>{account.nom}</strong></td><td>{account.email}</td><td><span className={`admin-role-badge is-${account.role}`}>{account.role}</span></td><td>{account.commandes_count || 0}</td><td>{date(account.created_at)}</td><td><Actions onEdit={() => onEdit(account)} onDelete={() => onDelete(account.id)} deleting={deletingId === `user-${account.id}`} /></td></tr>)}</AdminTable></Management>;
+}
+
+function Management({ title, action, onAction, children }) { return <div><div className="admin-management-bar"><strong>{title}</strong><button className="admin-primary" onClick={onAction}>+ {action}</button></div><Panel>{children}</Panel></div>; }
+function Panel({ title, children }) { return <section className="admin-panel">{title && <div className="admin-panel-title"><h2>{title}</h2></div>}{children}</section>; }
+function Status({ value }) { return <span className={`admin-status is-${value}`}>{statusLabels[value] || value}</span>; }
+function Stock({ value }) { return <span className={`admin-stock ${value === 0 ? "is-out" : value <= 5 ? "is-low" : ""}`}>{value}</span>; }
+function Actions({ onEdit, onDelete, deleting }) { return <div className="admin-actions"><button onClick={onEdit}>Edit</button><button className="is-danger" onClick={onDelete} disabled={deleting}>{deleting ? "…" : "Delete"}</button></div>; }
+
+function AdminTable({ headers, children }) { return <div className="admin-table-wrap"><table className="admin-table"><thead><tr>{headers.map((header) => <th key={header}>{header}</th>)}</tr></thead><tbody>{children}</tbody></table></div>; }
+function AdminState({ title, message, action, onAction }) { return <div className="admin-state"><span>EP</span><h2>{title}</h2><p>{message}</p>{action && <button className="admin-secondary" onClick={onAction}>{action}</button>}</div>; }
+
+function Modal({ title, children, onClose, onSave, loading, saveText }) {
+  return <div className="admin-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="admin-modal" role="dialog" aria-modal="true" aria-label={title}><header><div><span>Elite PC Admin</span><h2>{title}</h2></div><button aria-label="Close" onClick={onClose}>×</button></header><div className="admin-modal-body">{children}</div><footer><button className="admin-secondary" onClick={onClose}>Cancel</button><button className="admin-primary" onClick={onSave} disabled={loading}>{loading ? "Saving…" : saveText}</button></footer></section></div>;
+}
+function Field({ label, children }) { return <label className="admin-field"><span>{label}</span>{children}</label>; }
+function Input({ form, setForm, name, type = "text", required = false }) { return <input type={type} required={required} value={form[name]} onChange={(event) => setForm({ ...form, [name]: event.target.value })} />; }
+
+function ProductModal({ editing, form, setForm, categories, onClose, onSave, loading }) {
+  return <Modal title={editing ? "Edit Product" : "New Product"} onClose={onClose} onSave={onSave} loading={loading} saveText={editing ? "Save Changes" : "Create Product"}><div className="admin-form-grid"><Field label="Product name"><Input form={form} setForm={setForm} name="nom" required /></Field><Field label="Category"><select value={form.categorie_id} onChange={(event) => setForm({ ...form, categorie_id: event.target.value })}><option value="">Select category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.nom}</option>)}</select></Field><Field label="Price (€)"><Input form={form} setForm={setForm} name="prix" type="number" required /></Field><Field label="Stock"><Input form={form} setForm={setForm} name="stock" type="number" required /></Field><Field label="Brand"><Input form={form} setForm={setForm} name="brand" /></Field><Field label="Processor"><Input form={form} setForm={setForm} name="processor" /></Field><Field label="Graphics card"><Input form={form} setForm={setForm} name="graphics_card" /></Field><Field label="RAM"><Input form={form} setForm={setForm} name="ram_details" /></Field><Field label="Storage"><Input form={form} setForm={setForm} name="storage_details" /></Field><Field label="Image URL"><Input form={form} setForm={setForm} name="image" /></Field><Field label="Description"><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows="4" /></Field><label className="admin-checkbox"><input type="checkbox" checked={form.is_custom_build} onChange={(event) => setForm({ ...form, is_custom_build: event.target.checked })} /><span>Custom build</span></label></div></Modal>;
+}
+function CategoryModal({ editing, form, setForm, onClose, onSave, loading }) { return <Modal title={editing ? "Edit Category" : "New Category"} onClose={onClose} onSave={onSave} loading={loading} saveText={editing ? "Save Changes" : "Create Category"}><div className="admin-form-grid"><Field label="Category name"><Input form={form} setForm={setForm} name="nom" required /></Field><Field label="Description"><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows="4" /></Field></div></Modal>; }
+function UserModal({ editing, form, setForm, onClose, onSave, loading }) { return <Modal title={editing ? "Edit User" : "New User"} onClose={onClose} onSave={onSave} loading={loading} saveText={editing ? "Save Changes" : "Create User"}><div className="admin-form-grid"><Field label="Name"><Input form={form} setForm={setForm} name="nom" required /></Field><Field label="Email"><Input form={form} setForm={setForm} name="email" type="email" required /></Field><Field label={editing ? "Password (leave blank to keep current)" : "Password"}><Input form={form} setForm={setForm} name="mot_de_passe" type="password" required={!editing} /></Field><Field label="Role"><select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}><option value="client">Client</option><option value="admin">Admin</option></select></Field></div></Modal>; }
