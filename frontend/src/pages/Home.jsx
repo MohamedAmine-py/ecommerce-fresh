@@ -17,7 +17,7 @@ export default function Home() {
         setProducts(productResponse.data || []);
         setCategories(Array.isArray(categoryResponse) ? categoryResponse : []);
       })
-      .catch(() => setError("Impossible de charger le catalogue pour le moment."))
+      .catch(() => setError("The catalog could not be loaded right now."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -28,17 +28,17 @@ export default function Home() {
     <>
       <section className="hero" style={{ "--hero-image": `url("${heroImage}")` }}>
         <div className="hero-inner animate-item storefront-container">
-          <div className="hero-tag">Elite PC · Hardware haute performance</div>
+          <div className="hero-tag">Elite PC · High-performance hardware</div>
           <h1 className="hero-title">
             Built for <em>Performance</em>
           </h1>
           <p className="hero-desc">
-            Des composants exigeants aux machines complètes, découvrez du matériel
-            pensé pour le jeu, la création et les charges de travail intensives.
+            From high-end components to complete systems, discover hardware built
+            for gaming, content creation, and demanding workloads.
           </p>
           <div className="hero-actions">
-            <Link to="/products" className="button button-primary">Voir le catalogue <span>→</span></Link>
-            <Link to="/about" className="button button-secondary">Découvrir Elite PC</Link>
+            <Link to="/products" className="button button-primary">View the catalog <span>→</span></Link>
+            <Link to="/about" className="button button-secondary">Discover Elite PC</Link>
           </div>
         </div>
       </section>
@@ -68,18 +68,18 @@ export default function Home() {
 
         <section className="home-section" id="products">
           <SectionHeading
-            eyebrow="Sélection actuelle"
+            eyebrow="Current selection"
             title="Featured Hardware & Rigs"
-            actionLabel="Voir tout"
+            actionLabel="View all"
             actionTo="/products"
           />
 
         {loading ? (
           <ProductGridSkeleton />
         ) : error ? (
-          <StorefrontState title="Catalogue indisponible" message={error} actionLabel="Ouvrir le catalogue" actionTo="/products" />
+          <StorefrontState title="Catalog unavailable" message={error} actionLabel="Open the catalog" actionTo="/products" />
         ) : featured.length === 0 ? (
-          <StorefrontState title="Aucun produit disponible" message="Le catalogue ne contient pas encore de produits." />
+          <StorefrontState title="No products available" message="The catalog does not contain any products yet." />
         ) : (
           <div className="grid product-grid">
             {featured.map((p, index) => (
@@ -92,22 +92,22 @@ export default function Home() {
 
         <section className="promo-panel">
           <div className="promo-copy">
-            <span className="store-eyebrow">Votre prochain système</span>
-            <h2>La performance commence par les bons composants.</h2>
-            <p>Explorez les machines, composants et périphériques disponibles, comparez leurs caractéristiques réelles et choisissez la configuration adaptée à votre usage.</p>
+            <span className="store-eyebrow">Your next system</span>
+            <h2>Performance starts with the right components.</h2>
+            <p>Explore available systems, components, and peripherals, compare their real specifications, and choose the setup that fits your needs.</p>
             <div className="promo-actions">
-              <Link className="button button-primary" to="/products">Explorer le matériel</Link>
-              <Link className="text-link" to="/contact">Besoin d’aide ?</Link>
+              <Link className="button button-primary" to="/products">Explore hardware</Link>
+              <Link className="text-link" to="/contact">Need help?</Link>
             </div>
           </div>
-          <div className="promo-image" style={{ backgroundImage: `url("${heroImage}")` }} role="img" aria-label="Matériel informatique Elite PC" />
+          <div className="promo-image" style={{ backgroundImage: `url("${heroImage}")` }} role="img" aria-label="Elite PC computer hardware" />
         </section>
 
-        <section className="benefits" aria-label="Les avantages de la boutique">
-          <article><span className="benefit-icon">01</span><h3>Informations techniques</h3><p>Les spécifications disponibles sont présentées clairement pour chaque produit.</p></article>
-          <article><span className="benefit-icon">02</span><h3>Stock visible</h3><p>La disponibilité affichée provient directement du catalogue Elite PC.</p></article>
-          <article><span className="benefit-icon">03</span><h3>Parcours simple</h3><p>Favoris, panier et commandes restent accessibles depuis une navigation cohérente.</p></article>
-          <article><span className="benefit-icon">04</span><h3>Conseils à portée de main</h3><p>Le support et l’assistant Elite AI sont disponibles depuis la boutique.</p></article>
+        <section className="benefits" aria-label="Store benefits">
+          <article><span className="benefit-icon">01</span><h3>Technical information</h3><p>Available specifications are presented clearly for every product.</p></article>
+          <article><span className="benefit-icon">02</span><h3>Visible stock</h3><p>Displayed availability comes directly from the Elite PC catalog.</p></article>
+          <article><span className="benefit-icon">03</span><h3>Simple shopping</h3><p>Favorites, cart, and orders remain accessible through consistent navigation.</p></article>
+          <article><span className="benefit-icon">04</span><h3>Advice within reach</h3><p>Support and the Elite AI assistant are available throughout the store.</p></article>
         </section>
       </main>
     </>

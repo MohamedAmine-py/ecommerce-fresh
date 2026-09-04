@@ -19,7 +19,7 @@ export function SectionHeading({ eyebrow, title, actionLabel, actionTo }) {
 
 export function ProductGridSkeleton({ count = 4 }) {
   return (
-    <div className="grid product-grid" aria-label="Chargement des produits">
+    <div className="grid product-grid" aria-label="Loading products">
       {Array.from({ length: count }, (_, index) => (
         <div className="product-skeleton" key={index} aria-hidden="true">
           <div className="skel product-skeleton-image" />

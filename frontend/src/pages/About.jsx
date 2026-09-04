@@ -5,17 +5,17 @@ const principles = [
   {
     number: "01",
     title: "Performance first",
-    text: "Des ordinateurs, composants et périphériques pensés pour le jeu, la création et les charges de travail exigeantes.",
+    text: "Computers, components, and peripherals selected for gaming, content creation, and demanding workloads.",
   },
   {
     number: "02",
-    title: "Des informations utiles",
-    text: "Prix, disponibilité et caractéristiques techniques sont présentés clairement pour faciliter chaque comparaison.",
+    title: "Useful information",
+    text: "Prices, availability, and technical specifications are presented clearly to make every comparison easier.",
   },
   {
     number: "03",
-    title: "Pour les passionnés de PC",
-    text: "Une expérience directe et lisible, conçue pour celles et ceux qui veulent comprendre le matériel qu'ils choisissent.",
+    title: "For PC enthusiasts",
+    text: "A direct, readable experience for customers who want to understand the hardware they choose.",
   },
 ];
 
@@ -23,16 +23,16 @@ export default function About() {
   return (
     <main className="simple-page about-page">
       <header className="simple-page-hero">
-        <span className="store-eyebrow">À propos d'Elite PC</span>
-        <h1>Le matériel qui compte,<br /><em>présenté clairement.</em></h1>
+        <span className="store-eyebrow">About Elite PC</span>
+        <h1>Hardware that matters,<br /><em>presented clearly.</em></h1>
         <p>
-          Elite PC réunit des systèmes et composants haute performance dans une
-          boutique pensée pour rendre le choix du matériel plus simple et plus précis.
+          Elite PC brings high-performance systems and components together in a
+          store designed to make choosing hardware simpler and more precise.
         </p>
-        <Link className="button button-primary" to="/products">Explorer le catalogue</Link>
+        <Link className="button button-primary" to="/products">Explore the catalog</Link>
       </header>
 
-      <section className="about-principles" aria-label="Les principes Elite PC">
+      <section className="about-principles" aria-label="Elite PC principles">
         {principles.map((principle) => (
           <article className="simple-info-card" key={principle.number}>
             <span className="simple-card-number">{principle.number}</span>
@@ -44,11 +44,11 @@ export default function About() {
 
       <section className="simple-callout">
         <div>
-          <span className="store-eyebrow">Une question avant de choisir ?</span>
-          <h2>Elite AI vous aide à comparer le catalogue disponible.</h2>
-          <p>Ouvrez le bouton Elite AI pour demander un conseil matériel ou vérifier une compatibilité.</p>
+          <span className="store-eyebrow">A question before you choose?</span>
+          <h2>Elite AI helps you compare the available catalog.</h2>
+          <p>Open Elite AI to ask for hardware advice or check compatibility.</p>
         </div>
-        <Link className="button button-secondary" to="/contact">Voir les options d'aide</Link>
+        <Link className="button button-secondary" to="/contact">View help options</Link>
       </section>
     </main>
   );

@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { applyProductFallback, productImage } from "../utils/productAssets";
+import { formatCurrency } from "../utils/currency";
 
 function CartItem({ item, updateCartItem, removeFromCart }) {
   const specs = [item.processor, item.graphics_card, item.ram_details, item.storage_details].filter(Boolean).slice(0, 2);
@@ -9,10 +10,10 @@ function CartItem({ item, updateCartItem, removeFromCart }) {
   return (
     <article className="cart-page-item">
       <Link className="cart-page-image" to={`/products/${item.id}`}><img src={productImage(item)} alt={item.nom} loading="lazy" decoding="async" onError={(event) => applyProductFallback(event, item)} /></Link>
-      <div className="cart-page-product"><span>{item.categorie?.nom || "Hardware"}</span><Link to={`/products/${item.id}`}>{item.nom}</Link>{specs.length > 0 && <p>{specs.join(" · ")}</p>}<button className="cart-remove" onClick={() => removeFromCart(item.id)}>Retirer</button></div>
-      <div className="cart-unit-price"><span>Prix unitaire</span><strong>{Number(item.prix).toFixed(2)} €</strong></div>
-      <div className="cart-quantity"><span>Quantité</span><div><button onClick={() => updateCartItem(item.id, item.quantite - 1)} aria-label={`Réduire la quantité de ${item.nom}`}>−</button><strong>{item.quantite}</strong><button onClick={() => updateCartItem(item.id, item.quantite + 1)} aria-label={`Augmenter la quantité de ${item.nom}`}>+</button></div></div>
-      <div className="cart-line-total"><span>Sous-total</span><strong>{(Number(item.prix) * item.quantite).toFixed(2)} €</strong></div>
+      <div className="cart-page-product"><span>{item.categorie?.nom || "Hardware"}</span><Link to={`/products/${item.id}`}>{item.nom}</Link>{specs.length > 0 && <p>{specs.join(" · ")}</p>}<button className="cart-remove" onClick={() => removeFromCart(item.id)}>Remove</button></div>
+      <div className="cart-unit-price"><span>Unit price</span><strong>{formatCurrency(item.prix)}</strong></div>
+      <div className="cart-quantity"><span>Quantity</span><div><button onClick={() => updateCartItem(item.id, item.quantite - 1)} aria-label={`Decrease quantity of ${item.nom}`}>−</button><strong>{item.quantite}</strong><button onClick={() => updateCartItem(item.id, item.quantite + 1)} aria-label={`Increase quantity of ${item.nom}`}>+</button></div></div>
+      <div className="cart-line-total"><span>Subtotal</span><strong>{formatCurrency(Number(item.prix) * item.quantite)}</strong></div>
     </article>
   );
 }
@@ -24,13 +25,13 @@ export default function Cart() {
 
   return (
     <main className="cart-page storefront-container">
-      <header className="cart-page-header"><div><span className="store-eyebrow">Votre sélection</span><h1>Review Your Cart</h1><p>{cartCount} article{cartCount !== 1 ? "s" : ""} dans votre configuration.</p></div><Link className="text-link" to="/products">← Continuer mes achats</Link></header>
+      <header className="cart-page-header"><div><span className="store-eyebrow">Your selection</span><h1>Review Your Cart</h1><p>{cartCount} item{cartCount !== 1 ? "s" : ""} in your cart.</p></div><Link className="text-link" to="/products">← Continue shopping</Link></header>
       {cart.length === 0 ? (
-        <div className="cart-empty store-state"><div className="cart-empty-icon" aria-hidden="true">□</div><h3>Votre panier est vide</h3><p>Explorez le catalogue et ajoutez le matériel adapté à votre prochain système.</p><Link className="button button-primary" to="/products">Découvrir le catalogue</Link></div>
+        <div className="cart-empty store-state"><div className="cart-empty-icon" aria-hidden="true">□</div><h3>Your cart is empty</h3><p>Explore the catalog and add the right hardware for your next system.</p><Link className="button button-primary" to="/products">Browse the catalog</Link></div>
       ) : (
         <div className="cart-page-layout">
-          <section className="cart-items" aria-label="Produits dans le panier">{cart.map((item) => <CartItem key={item.id} item={item} updateCartItem={updateCartItem} removeFromCart={removeFromCart} />)}</section>
-          <aside className="cart-summary"><span className="store-eyebrow">Récapitulatif</span><h2>Order Summary</h2><div className="summary-row"><span>Sous-total</span><strong>{cartTotal.toFixed(2)} €</strong></div><div className="summary-row"><span>Livraison</span><strong>Confirmée à la commande</strong></div><div className="summary-total"><span>Total estimé</span><strong>{cartTotal.toFixed(2)} €</strong></div><p className="summary-note">Le montant final est recalculé par le serveur à partir des prix actuels du catalogue.</p><button className="button button-primary summary-checkout" onClick={proceedToCheckout}>{user ? "Passer au paiement" : "Se connecter pour commander"} <span>→</span></button><Link className="summary-continue" to="/products">Continuer mes achats</Link></aside>
+          <section className="cart-items" aria-label="Products in cart">{cart.map((item) => <CartItem key={item.id} item={item} updateCartItem={updateCartItem} removeFromCart={removeFromCart} />)}</section>
+          <aside className="cart-summary"><span className="store-eyebrow">Summary</span><h2>Order Summary</h2><div className="summary-row"><span>Subtotal</span><strong>{formatCurrency(cartTotal)}</strong></div><div className="summary-row"><span>Shipping</span><strong>Confirmed at checkout</strong></div><div className="summary-total"><span>Estimated total</span><strong>{formatCurrency(cartTotal)}</strong></div><p className="summary-note">The final amount is recalculated by the server using current catalog prices.</p><button className="button button-primary summary-checkout" onClick={proceedToCheckout}>{user ? "Proceed to Checkout" : "Sign in to Order"} <span>→</span></button><Link className="summary-continue" to="/products">Continue shopping</Link></aside>
         </div>
       )}
     </main>

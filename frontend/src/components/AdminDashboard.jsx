@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import BrandLogo from "./BrandLogo";
+import { formatCurrency } from "../utils/currency";
 import {
   createCategory, createProduct, createUser, deleteCategory, deleteOrder,
   deleteProduct, deleteUser, getCategories, getOrders, getProducts, getStats,
@@ -9,15 +10,26 @@ import {
 import "../styles/AdminDashboard.css";
 
 const tabs = [
-  ["overview", "Overview", "OV"], ["products", "Products", "PR"],
-  ["categories", "Categories", "CA"], ["orders", "Orders", "OR"],
-  ["users", "Users", "US"],
+  ["overview", "Overview"], ["products", "Products"],
+  ["categories", "Categories"], ["orders", "Orders"],
+  ["users", "Users"],
 ];
+
+function AdminNavIcon({ name }) {
+  const paths = {
+    overview: <><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></>,
+    products: <><path d="M4 7h16v13H4z" /><path d="M3 4h18v3H3z" /><path d="M9 11h6" /></>,
+    categories: <><path d="m12 3 4 4-4 4-4-4 4-4Z" /><path d="m6 13 3 3-3 3-3-3 3-3Z" /><path d="m18 13 3 3-3 3-3-3 3-3Z" /></>,
+    orders: <><path d="M6 3h12v18H6z" /><path d="M9 7h6M9 11h6M9 15h4" /><path d="M4 6v12M20 6v12" /></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
+  };
+
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+}
 const statusLabels = { en_cours: "In progress", validee: "Confirmed", annulee: "Cancelled" };
 const blankProduct = { nom: "", prix: "", stock: "", categorie_id: "", description: "", image: "", brand: "", processor: "", graphics_card: "", ram_details: "", storage_details: "", is_custom_build: false };
 const blankCategory = { nom: "", description: "" };
 const blankUser = { nom: "", email: "", mot_de_passe: "", role: "client" };
-const money = (value) => `${Number(value || 0).toFixed(2)} €`;
 const date = (value) => new Date(value).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 
 function requestMessage(error) {
@@ -151,7 +163,7 @@ export default function AdminDashboard({ token, user, onToast }) {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <div className="admin-brand"><BrandLogo variant="dark-surface" /><span>Admin</span></div>
-        <nav aria-label="Admin navigation">{tabs.map(([id, label, code]) => <button key={id} className={tab === id ? "is-active" : ""} onClick={() => setTab(id)}><span>{code}</span>{label}</button>)}</nav>
+        <nav aria-label="Admin navigation">{tabs.map(([id, label]) => <button key={id} className={tab === id ? "is-active" : ""} onClick={() => setTab(id)}><span><AdminNavIcon name={id} /></span>{label}</button>)}</nav>
         <Link className="admin-store-link" to="/">← Return to storefront</Link>
       </aside>
 
@@ -201,7 +213,7 @@ function orderTrend(orders, days = 7) {
 }
 
 function Overview({ stats, orders }) {
-  const cards = [["Clients", stats?.total_users], ["Products", stats?.total_produits], ["Orders", stats?.total_commandes], ["In progress", stats?.commandes_en_cours], ["Confirmed revenue", money(stats?.revenus_total)]];
+  const cards = [["Clients", stats?.total_users], ["Products", stats?.total_produits], ["Orders", stats?.total_commandes], ["In progress", stats?.commandes_en_cours], ["Confirmed revenue", formatCurrency(stats?.revenus_total)]];
   const trend = orderTrend(orders);
   const maxOrders = Math.max(1, ...trend.map((point) => point.count));
   const periodTotal = trend.reduce((sum, point) => sum + point.count, 0);
@@ -218,12 +230,12 @@ function Overview({ stats, orders }) {
         </div>)}
       </div>
     </section>
-    <Panel title="Recent Orders"><AdminTable headers={["Order", "Customer", "Total", "Status", "Date"]}>{(stats?.recent_orders || []).map((order) => <tr key={order.id}><td className="admin-id">#{order.id}</td><td>{order.user?.nom || "—"}</td><td>{money(order.total)}</td><td><Status value={order.statut} /></td><td>{date(order.created_at)}</td></tr>)}</AdminTable></Panel>
+    <Panel title="Recent Orders"><AdminTable headers={["Order", "Customer", "Total", "Status", "Date"]}>{(stats?.recent_orders || []).map((order) => <tr key={order.id}><td className="admin-id">#{order.id}</td><td>{order.user?.nom || "—"}</td><td>{formatCurrency(order.total)}</td><td><Status value={order.statut} /></td><td>{date(order.created_at)}</td></tr>)}</AdminTable></Panel>
   </div>;
 }
 
 function Products({ products, onAdd, onEdit, onDelete, deletingId }) {
-  return <Management title={`${products.length} products`} action="New Product" onAction={onAdd}><AdminTable headers={["Product", "Category", "Price", "Stock", "Actions"]}>{products.map((product) => <tr key={product.id}><td><strong>{product.nom}</strong>{product.brand && <small>{product.brand}</small>}</td><td>{product.categorie?.nom || "—"}</td><td className="admin-price">{money(product.prix)}</td><td><Stock value={product.stock} /></td><td><Actions onEdit={() => onEdit(product)} onDelete={() => onDelete(product.id)} deleting={deletingId === `product-${product.id}`} /></td></tr>)}</AdminTable></Management>;
+  return <Management title={`${products.length} products`} action="New Product" onAction={onAdd}><AdminTable headers={["Product", "Category", "Price", "Stock", "Actions"]}>{products.map((product) => <tr key={product.id}><td><strong>{product.nom}</strong>{product.brand && <small>{product.brand}</small>}</td><td>{product.categorie?.nom || "—"}</td><td className="admin-price">{formatCurrency(product.prix)}</td><td><Stock value={product.stock} /></td><td><Actions onEdit={() => onEdit(product)} onDelete={() => onDelete(product.id)} deleting={deletingId === `product-${product.id}`} /></td></tr>)}</AdminTable></Management>;
 }
 
 function Categories({ categories, onAdd, onEdit, onDelete, deletingId }) {
@@ -234,12 +246,12 @@ function Orders({ orders, expandedOrder, setExpandedOrder, onStatus, onDelete, d
   if (!orders.length) return <AdminState title="No orders" message="Customer orders will appear here." />;
   return <Panel><AdminTable headers={["Order", "Customer", "Total", "Items", "Status", "Date", "Actions"]}>{orders.flatMap((order) => {
     const expanded = expandedOrder === order.id;
-    return [<tr key={order.id}><td className="admin-id">#{order.id}</td><td><strong>{order.user?.nom || "—"}</strong><small>{order.user?.email}</small></td><td className="admin-price">{money(order.total)}</td><td>{order.details?.length || 0}</td><td><select className={`admin-status-select is-${order.statut}`} value={order.statut} disabled={actionLoading} onChange={(event) => onStatus(order.id, event.target.value)}><option value="en_cours">In progress</option><option value="validee">Confirmed</option><option value="annulee">Cancelled</option></select></td><td>{date(order.created_at)}</td><td><div className="admin-actions"><button onClick={() => setExpandedOrder(expanded ? null : order.id)}>{expanded ? "Close" : "Details"}</button><button className="is-danger" onClick={() => onDelete(order.id)} disabled={deletingId === `order-${order.id}`}>{deletingId === `order-${order.id}` ? "…" : "Delete"}</button></div></td></tr>, expanded && <tr className="admin-order-detail-row" key={`${order.id}-details`}><td colSpan="7"><OrderDetail order={order} /></td></tr>];
+    return [<tr key={order.id}><td className="admin-id">#{order.id}</td><td><strong>{order.user?.nom || "—"}</strong><small>{order.user?.email}</small></td><td className="admin-price">{formatCurrency(order.total)}</td><td>{order.details?.length || 0}</td><td><select className={`admin-status-select is-${order.statut}`} value={order.statut} disabled={actionLoading} onChange={(event) => onStatus(order.id, event.target.value)}><option value="en_cours">In progress</option><option value="validee">Confirmed</option><option value="annulee">Cancelled</option></select></td><td>{date(order.created_at)}</td><td><div className="admin-actions"><button onClick={() => setExpandedOrder(expanded ? null : order.id)}>{expanded ? "Close" : "Details"}</button><button className="is-danger" onClick={() => onDelete(order.id)} disabled={deletingId === `order-${order.id}`}>{deletingId === `order-${order.id}` ? "…" : "Delete"}</button></div></td></tr>, expanded && <tr className="admin-order-detail-row" key={`${order.id}-details`}><td colSpan="7"><OrderDetail order={order} /></td></tr>];
   })}</AdminTable></Panel>;
 }
 
 function OrderDetail({ order }) {
-  return <div className="admin-order-detail"><div><h3>Order items</h3>{order.details?.map((detail) => <div className="admin-order-line" key={detail.id}><span>{detail.produit?.nom || "Product unavailable"} × {detail.quantite}</span><strong>{money(Number(detail.prix_unitaire) * detail.quantite)}</strong></div>)}</div><dl><dt>Delivery address</dt><dd>{order.delivery_address || "—"}</dd><dt>Phone</dt><dd>{order.delivery_phone || "—"}</dd><dt>Payment method</dt><dd>{order.payment_method?.replace(/_/g, " ") || "—"}</dd><dt>Order total</dt><dd>{money(order.total)}</dd></dl></div>;
+  return <div className="admin-order-detail"><div><h3>Order items</h3>{order.details?.map((detail) => <div className="admin-order-line" key={detail.id}><span>{detail.produit?.nom || "Product unavailable"} × {detail.quantite}</span><strong>{formatCurrency(Number(detail.prix_unitaire) * detail.quantite)}</strong></div>)}</div><dl><dt>Delivery address</dt><dd>{order.delivery_address || "—"}</dd><dt>Phone</dt><dd>{order.delivery_phone || "—"}</dd><dt>Payment method</dt><dd>{order.payment_method?.replace(/_/g, " ") || "—"}</dd><dt>Order total</dt><dd>{formatCurrency(order.total)}</dd></dl></div>;
 }
 
 function Users({ users, onAdd, onEdit, onDelete, deletingId }) {
@@ -262,7 +274,7 @@ function Field({ label, children }) { return <label className="admin-field"><spa
 function Input({ form, setForm, name, type = "text", required = false }) { return <input type={type} required={required} value={form[name]} onChange={(event) => setForm({ ...form, [name]: event.target.value })} />; }
 
 function ProductModal({ editing, form, setForm, categories, onClose, onSave, loading }) {
-  return <Modal title={editing ? "Edit Product" : "New Product"} onClose={onClose} onSave={onSave} loading={loading} saveText={editing ? "Save Changes" : "Create Product"}><div className="admin-form-grid"><Field label="Product name"><Input form={form} setForm={setForm} name="nom" required /></Field><Field label="Category"><select value={form.categorie_id} onChange={(event) => setForm({ ...form, categorie_id: event.target.value })}><option value="">Select category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.nom}</option>)}</select></Field><Field label="Price (€)"><Input form={form} setForm={setForm} name="prix" type="number" required /></Field><Field label="Stock"><Input form={form} setForm={setForm} name="stock" type="number" required /></Field><Field label="Brand"><Input form={form} setForm={setForm} name="brand" /></Field><Field label="Processor"><Input form={form} setForm={setForm} name="processor" /></Field><Field label="Graphics card"><Input form={form} setForm={setForm} name="graphics_card" /></Field><Field label="RAM"><Input form={form} setForm={setForm} name="ram_details" /></Field><Field label="Storage"><Input form={form} setForm={setForm} name="storage_details" /></Field><Field label="Image URL"><Input form={form} setForm={setForm} name="image" /></Field><Field label="Description"><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows="4" /></Field><label className="admin-checkbox"><input type="checkbox" checked={form.is_custom_build} onChange={(event) => setForm({ ...form, is_custom_build: event.target.checked })} /><span>Custom build</span></label></div></Modal>;
+  return <Modal title={editing ? "Edit Product" : "New Product"} onClose={onClose} onSave={onSave} loading={loading} saveText={editing ? "Save Changes" : "Create Product"}><div className="admin-form-grid"><Field label="Product name"><Input form={form} setForm={setForm} name="nom" required /></Field><Field label="Category"><select value={form.categorie_id} onChange={(event) => setForm({ ...form, categorie_id: event.target.value })}><option value="">Select category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.nom}</option>)}</select></Field><Field label="Price (USD)"><Input form={form} setForm={setForm} name="prix" type="number" required /></Field><Field label="Stock"><Input form={form} setForm={setForm} name="stock" type="number" required /></Field><Field label="Brand"><Input form={form} setForm={setForm} name="brand" /></Field><Field label="Processor"><Input form={form} setForm={setForm} name="processor" /></Field><Field label="Graphics card"><Input form={form} setForm={setForm} name="graphics_card" /></Field><Field label="RAM"><Input form={form} setForm={setForm} name="ram_details" /></Field><Field label="Storage"><Input form={form} setForm={setForm} name="storage_details" /></Field><Field label="Image URL"><Input form={form} setForm={setForm} name="image" /></Field><Field label="Description"><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows="4" /></Field><label className="admin-checkbox"><input type="checkbox" checked={form.is_custom_build} onChange={(event) => setForm({ ...form, is_custom_build: event.target.checked })} /><span>Custom build</span></label></div></Modal>;
 }
 function CategoryModal({ editing, form, setForm, onClose, onSave, loading }) { return <Modal title={editing ? "Edit Category" : "New Category"} onClose={onClose} onSave={onSave} loading={loading} saveText={editing ? "Save Changes" : "Create Category"}><div className="admin-form-grid"><Field label="Category name"><Input form={form} setForm={setForm} name="nom" required /></Field><Field label="Description"><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} rows="4" /></Field></div></Modal>; }
 function UserModal({ editing, form, setForm, onClose, onSave, loading }) { return <Modal title={editing ? "Edit User" : "New User"} onClose={onClose} onSave={onSave} loading={loading} saveText={editing ? "Save Changes" : "Create User"}><div className="admin-form-grid"><Field label="Name"><Input form={form} setForm={setForm} name="nom" required /></Field><Field label="Email"><Input form={form} setForm={setForm} name="email" type="email" required /></Field><Field label={editing ? "Password (leave blank to keep current)" : "Password"}><Input form={form} setForm={setForm} name="mot_de_passe" type="password" required={!editing} /></Field><Field label="Role"><select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}><option value="client">Client</option><option value="admin">Admin</option></select></Field></div></Modal>; }

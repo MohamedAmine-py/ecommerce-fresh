@@ -9,26 +9,26 @@ export default function Footer() {
         <div className="footer-grid">
           <div className="footer-brand">
             <Link className="footer-logo" to="/" aria-label="Elite PC home"><BrandLogo variant="dark-surface" /></Link>
-            <p>Matériel et systèmes PC haute performance, réunis dans une expérience claire et exigeante.</p>
+            <p>High-performance PC hardware and systems, presented in a clear, considered shopping experience.</p>
           </div>
           <div className="footer-col">
-            <h3>Boutique</h3>
-            <Link to="/products">Tous les produits</Link>
-            <Link to="/favorites">Favoris</Link>
+            <h3>Shop</h3>
+            <Link to="/products">All products</Link>
+            <Link to="/favorites">Favorites</Link>
           </div>
           <div className="footer-col">
             <h3>Elite PC</h3>
-            <Link to="/about">À propos</Link>
+            <Link to="/about">About</Link>
             <Link to="/contact">Contact</Link>
           </div>
           <div className="footer-col">
-            <h3>Votre compte</h3>
-            <Link to="/orders">Commandes</Link>
+            <h3>Your account</h3>
+            <Link to="/orders">Orders</Link>
           </div>
         </div>
         <div className="footer-bottom">
-          <div>© 2026 Elite PC. Tous droits réservés.</div>
-          <span>Conçu pour le matériel qui compte.</span>
+          <div>© 2026 Elite PC. All rights reserved.</div>
+          <span>Built for hardware that matters.</span>
         </div>
       </div>
     </footer>

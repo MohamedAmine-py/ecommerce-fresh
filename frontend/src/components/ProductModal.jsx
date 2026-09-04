@@ -1,5 +1,6 @@
 import React from 'react';
 import { applyProductFallback, productImage } from '../utils/productAssets';
+import { formatCurrency } from '../utils/currency';
 
 export default function ProductModal({ product, onClose, onAddToCart }) {
   if (!product) return null;
@@ -84,7 +85,7 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Price</div>
-              <div style={{ fontSize: 36, fontWeight: 900, color: "#06b6d4", fontFamily: "JetBrains Mono,monospace" }}>€{parseFloat(product.prix).toFixed(2)}</div>
+              <div style={{ fontSize: 36, fontWeight: 900, color: "#06b6d4", fontFamily: "JetBrains Mono,monospace" }}>{formatCurrency(product.prix)}</div>
             </div>
           </div>
 

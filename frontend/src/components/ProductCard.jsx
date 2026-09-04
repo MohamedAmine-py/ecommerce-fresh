@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { applyProductFallback, productImage } from "../utils/productAssets";
+import { formatCurrency } from "../utils/currency";
 
 // SVG Icons
 const IconHeartOutline = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>;
@@ -30,9 +31,9 @@ export default function ProductCard({ product, index }) {
           decoding="async"
           onError={(event) => applyProductFallback(event, p)}
         />
-        {isOut && <div className="card-badge badge-out">Épuisé</div>}
+        {isOut && <div className="card-badge badge-out">Out of stock</div>}
         {!isOut && p.stock <= 5 && (
-          <div className="card-badge badge-limited">Stock limité</div>
+          <div className="card-badge badge-limited">Low stock</div>
         )}
         <button
           className="card-favorite"
@@ -41,7 +42,7 @@ export default function ProductCard({ product, index }) {
             toggleFavorite(p);
           }}
           data-favorite={isFav}
-          title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+          title={isFav ? "Remove from favorites" : "Add to favorites"}
         >
           {isFav ? <IconHeartFilled /> : <IconHeartOutline />}
         </button>
@@ -67,15 +68,15 @@ export default function ProductCard({ product, index }) {
 
         <div className="card-foot">
           <div>
-            <div className="card-price">{parseFloat(p.prix).toFixed(2)} €</div>
+            <div className="card-price">{formatCurrency(p.prix)}</div>
             <div className={`card-stock ${isOut ? "is-out" : p.stock <= 5 ? "is-low" : ""}`}>
-              {isOut ? "Rupture de stock" : `${p.stock} en stock`}
+              {isOut ? "Out of stock" : `${p.stock} in stock`}
             </div>
           </div>
           <button
             className="card-add"
             disabled={isOut}
-            title={isOut ? "Épuisé" : "Ajouter au panier"}
+            title={isOut ? "Out of stock" : "Add to cart"}
             onClick={(e) => {
               e.stopPropagation();
               addToCart(p);

@@ -4,9 +4,9 @@ import { downloadInvoice, getOrder } from "../api/client";
 import { useApp } from "../context/AppContext";
 import { StorefrontState } from "../components/StorefrontUI";
 import { applyProductFallback, productImage } from "../utils/productAssets";
+import { formatCurrency } from "../utils/currency";
 
 const statusLabel = { en_cours: "In progress", validee: "Confirmed", annulee: "Cancelled" };
-const money = (value) => `${Number(value || 0).toFixed(2)} €`;
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -45,13 +45,13 @@ export default function OrderDetails() {
         <section className="order-items-panel"><h2>Purchased Products</h2><div className="order-items-list">{order.details?.map((detail) => (
           <article className="order-product" key={detail.id}>
             <img src={productImage(detail.produit)} alt="" loading="lazy" decoding="async" onError={(event) => applyProductFallback(event, detail.produit)} />
-            <div><strong>{detail.produit?.nom || "Product unavailable"}</strong><span>Quantity: {detail.quantite}</span><span>Unit price: {money(detail.prix_unitaire)}</span></div>
-            <b>{money(Number(detail.prix_unitaire) * detail.quantite)}</b>
+            <div><strong>{detail.produit?.nom || "Product unavailable"}</strong><span>Quantity: {detail.quantite}</span><span>Unit price: {formatCurrency(detail.prix_unitaire)}</span></div>
+            <b>{formatCurrency(Number(detail.prix_unitaire) * detail.quantite)}</b>
           </article>
         ))}</div></section>
         <aside className="order-info-column">
           <section className="order-info-panel"><h2>Delivery Information</h2><dl>{order.user?.nom && <><dt>Customer</dt><dd>{order.user.nom}</dd></>}<dt>Address</dt><dd>{order.delivery_address || "Not provided"}</dd><dt>Phone</dt><dd>{order.delivery_phone || "Not provided"}</dd>{order.estimated_delivery_date && <><dt>Estimated delivery</dt><dd>{new Date(order.estimated_delivery_date).toLocaleDateString()}</dd></>}</dl></section>
-          <section className="order-info-panel"><h2>Order Summary</h2><dl>{order.payment_method && <><dt>Payment method</dt><dd className="capitalize">{order.payment_method.replace(/_/g, " ")}</dd></>}<dt>Status</dt><dd>{statusLabel[order.statut] || order.statut}</dd></dl><div className="order-grand-total"><span>Total</span><strong>{money(order.total)}</strong></div></section>
+          <section className="order-info-panel"><h2>Order Summary</h2><dl>{order.payment_method && <><dt>Payment method</dt><dd className="capitalize">{order.payment_method.replace(/_/g, " ")}</dd></>}<dt>Status</dt><dd>{statusLabel[order.statut] || order.statut}</dd></dl><div className="order-grand-total"><span>Total</span><strong>{formatCurrency(order.total)}</strong></div></section>
         </aside>
       </div>
     </main>

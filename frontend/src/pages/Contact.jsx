@@ -2,9 +2,9 @@ import React from "react";
 
 const contactDetails = [
   { label: "Email", value: "contact@elitepc.ma" },
-  { label: "Téléphone", value: "+212 6 XX XX XX XX" },
-  { label: "Localisation", value: "Marrakech, Maroc" },
-  { label: "Horaires", value: "Lun – Sam · 09:00 – 18:00" },
+  { label: "Phone", value: "+212 6 XX XX XX XX" },
+  { label: "Location", value: "Marrakech, Morocco" },
+  { label: "Hours", value: "Mon – Sat · 09:00 – 18:00" },
 ];
 
 export default function Contact() {
@@ -12,10 +12,10 @@ export default function Contact() {
     <main className="simple-page contact-page">
       <header className="simple-page-hero simple-page-hero-compact">
         <span className="store-eyebrow">Contact</span>
-        <h1>Parlons-en.</h1>
+        <h1>Let’s talk.</h1>
         <p>
-          Contactez Elite PC pour une question sur un produit, une commande ou
-          pour toute demande générale concernant la boutique.
+          Contact Elite PC with product questions, order questions, or
+          any general inquiry about the store.
         </p>
       </header>
 
@@ -24,14 +24,14 @@ export default function Contact() {
           <div className="contact-panel-heading">
             <span>01</span>
             <div>
-              <h2 id="contact-form-title">Envoyer un message</h2>
-              <p>Présentez-nous votre demande aussi précisément que possible.</p>
+              <h2 id="contact-form-title">Send a message</h2>
+              <p>Tell us how we can help, with as much detail as possible.</p>
             </div>
           </div>
 
           <form className="contact-form">
             <label className="contact-field">
-              <span>Nom</span>
+              <span>Name</span>
               <input name="name" autoComplete="name" />
             </label>
 
@@ -41,7 +41,7 @@ export default function Contact() {
             </label>
 
             <label className="contact-field contact-field-wide">
-              <span>Sujet</span>
+              <span>Subject</span>
               <input name="subject" />
             </label>
 
@@ -51,7 +51,7 @@ export default function Contact() {
             </label>
 
             <div className="contact-submit-row contact-field-wide">
-              <button className="button button-primary" type="button">Envoyer le message →</button>
+              <button className="button button-primary" type="button">Send message →</button>
             </div>
           </form>
         </section>
@@ -60,8 +60,8 @@ export default function Contact() {
           <div className="contact-panel-heading">
             <span>02</span>
             <div>
-              <h2 id="contact-details-title">Coordonnées</h2>
-              <p>Informations de contact configurées pour Elite PC.</p>
+              <h2 id="contact-details-title">Contact details</h2>
+              <p>Ways to reach Elite PC.</p>
             </div>
           </div>
 

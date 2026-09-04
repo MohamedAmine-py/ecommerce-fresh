@@ -22,40 +22,40 @@ export default function Navbar() {
 
   return (
     <header className="site-header">
-    <nav className="nav storefront-container" aria-label="Navigation principale">
-      <Link to="/" className="nav-logo" aria-label="Elite PC - Accueil">
+    <nav className="nav storefront-container" aria-label="Main navigation">
+      <Link to="/" className="nav-logo" aria-label="Elite PC home">
         <BrandLogo variant="dark-surface" />
       </Link>
 
       <div className={`nav-links ${mobileOpen ? "is-open" : ""}`}>
-        <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} end>Boutique</NavLink>
-        <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>Produits</NavLink>
-        <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>À Propos</NavLink>
+        <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} end>Shop</NavLink>
+        <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>Products</NavLink>
+        <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>About</NavLink>
         <NavLink to="/contact" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>Contact</NavLink>
-        {user && <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>Commandes</NavLink>}
+        {user && <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>Orders</NavLink>}
         {user?.role === "admin" && <NavLink to="/admin" className={({ isActive }) => `nav-link admin-btn ${isActive ? "active" : ""}`}>Admin</NavLink>}
       </div>
       <div className="nav-search">
         <svg width="15" height="15" fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803a7.5 7.5 0 0010.607 0z"/></svg>
-        <input placeholder="Rechercher des produits..." value={search} onChange={handleSearchChange} />
+        <input placeholder="Search products..." value={search} onChange={handleSearchChange} />
       </div>
       <div className="nav-actions">
-        <button className="nav-icon-btn" onClick={() => setDarkMode(!darkMode)} title={darkMode ? "Mode Clair" : "Mode Sombre"}>
+        <button className="nav-icon-btn" onClick={() => setDarkMode(!darkMode)} title={darkMode ? "Light mode" : "Dark mode"}>
           {darkMode ? <IconSun /> : <IconMoon />}
         </button>
-        <NavLink to="/favorites" className={({ isActive }) => `nav-icon-btn ${isActive ? "active" : ""}`} title="Favoris" style={{ color: favorites.length > 0 ? "var(--accent)" : "rgba(255,255,255,.8)" }}>
+        <NavLink to="/favorites" className={({ isActive }) => `nav-icon-btn ${isActive ? "active" : ""}`} title="Favorites" style={{ color: favorites.length > 0 ? "var(--accent)" : "rgba(255,255,255,.8)" }}>
           {favorites.length > 0 ? <IconHeartFilled /> : <IconHeartOutline />}
           {favorites.length > 0 && <span className="cart-badge" style={{ background: "var(--accent)" }}>{favorites.length}</span>}
         </NavLink>
-        <button className="nav-icon-btn" onClick={() => navigate("/cart")} title="Panier">
+        <button className="nav-icon-btn" onClick={() => navigate("/cart")} title="Cart">
           <IconCart />
           {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
         </button>
         <div className="nav-user-btn" onClick={() => user ? setAuthOpen(true) : navigate("/login")}>
           <div className="nav-avatar">{user ? user.nom[0].toUpperCase() : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>}</div>
-          <span className="nav-user-name">{user ? user.nom.split(" ")[0] : "Connexion"}</span>
+          <span className="nav-user-name">{user ? user.nom.split(" ")[0] : "Sign In"}</span>
         </div>
-        <button className="nav-menu-btn" onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-label="Ouvrir le menu">
+        <button className="nav-menu-btn" onClick={() => setMobileOpen((open) => !open)} aria-expanded={mobileOpen} aria-label="Open menu">
           <span /><span /><span />
         </button>
       </div>

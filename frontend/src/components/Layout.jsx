@@ -6,6 +6,7 @@ import Footer from "./Footer";
 import SupportChat from "./SupportChat";
 import ProductModal from "./ProductModal";
 import { applyProductFallback, productImage } from "../utils/productAssets";
+import { formatCurrency } from "../utils/currency";
 import { login as apiLogin, register as apiRegister } from "../api/client";
 
 // Icon Cart for Drawer Empty View
@@ -54,11 +55,11 @@ export default function Layout({ children }) {
         setAuthOpen(false);
         setAuthForm({ nom: "", email: "", mot_de_passe: "" });
       } else {
-        setAuthErr(data.errors ? Object.values(data.errors).flat().join(" ") : data.message || "Erreur");
+        setAuthErr(data.errors ? Object.values(data.errors).flat().join(" ") : data.message || "Something went wrong.");
       }
     } catch (e) {
       setAuthLoading(false);
-      setAuthErr("Impossible de se connecter au serveur.");
+      setAuthErr("Could not connect to the server.");
     }
   }
 
@@ -90,9 +91,9 @@ export default function Layout({ children }) {
           <div className="drawer">
             <div className="drawer-hd">
               <div>
-                <div className="drawer-title">Mon Panier</div>
+                <div className="drawer-title">My Cart</div>
                 <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
-                  {cartCount} article{cartCount !== 1 ? "s" : ""}
+                  {cartCount} item{cartCount !== 1 ? "s" : ""}
                 </div>
               </div>
               <button className="drawer-x" onClick={() => setCartOpen(false)}>✕</button>
@@ -103,8 +104,8 @@ export default function Layout({ children }) {
                   <div className="empty-icon" style={{ opacity: 0.1 }}>
                     <IconCart width={64} height={64} />
                   </div>
-                  <h3>Panier vide</h3>
-                  <p>Ajoutez des produits pour commencer</p>
+                  <h3>Your cart is empty</h3>
+                  <p>Add products to get started</p>
                 </div>
               ) : (
                 cart.map((item) => (
@@ -121,7 +122,7 @@ export default function Layout({ children }) {
                     <div className="cart-info">
                       <div className="cart-name">{item.nom}</div>
                       <div className="cart-price">
-                        {(item.prix * item.quantite).toFixed(2)} €
+                        {formatCurrency(item.prix * item.quantite)}
                       </div>
                       <div className="cart-ctrls">
                         <button
@@ -153,7 +154,7 @@ export default function Layout({ children }) {
               <div className="drawer-ft">
                 <div className="cart-total-row">
                   <span className="cart-total-lbl">Total</span>
-                  <span className="cart-total-val">{cartTotal.toFixed(2)} €</span>
+                  <span className="cart-total-val">{formatCurrency(cartTotal)}</span>
                 </div>
                 <button
                   className="checkout-btn"
@@ -176,7 +177,7 @@ export default function Layout({ children }) {
             {user ? (
               <>
                 <div className="modal-hd">
-                  <div className="modal-title">Mon compte</div>
+                  <div className="modal-title">My Account</div>
                   <button className="modal-x" onClick={() => setAuthOpen(false)}>✕</button>
                 </div>
                 <div className="modal-body">
@@ -222,7 +223,7 @@ export default function Layout({ children }) {
                           marginTop: 8,
                         }}
                       >
-                        Administrateur
+                        Administrator
                       </div>
                     )}
                   </div>
@@ -244,7 +245,7 @@ export default function Layout({ children }) {
                       cursor: "pointer",
                     }}
                   >
-                    Déconnexion
+                    Sign Out
                   </button>
                 </div>
               </>
@@ -252,7 +253,7 @@ export default function Layout({ children }) {
               <>
                 <div className="modal-hd">
                   <div className="modal-title">
-                    {authMode === "login" ? "Connexion" : "Inscription"}
+                    {authMode === "login" ? "Sign In" : "Create Account"}
                   </div>
                   <button className="modal-x" onClick={() => setAuthOpen(false)}>✕</button>
                 </div>
@@ -260,10 +261,10 @@ export default function Layout({ children }) {
                   {authErr && <div className="err-msg">{authErr}</div>}
                   {authMode === "register" && (
                     <div className="f-group">
-                      <label className="f-label">Nom complet</label>
+                      <label className="f-label">Full name</label>
                       <input
                         className="f-input"
-                        placeholder="Votre nom"
+                        placeholder="Your name"
                         value={authForm.nom}
                         onChange={(e) =>
                           setAuthForm({ ...authForm, nom: e.target.value })
@@ -284,7 +285,7 @@ export default function Layout({ children }) {
                     />
                   </div>
                   <div className="f-group">
-                    <label className="f-label">Mot de passe</label>
+                    <label className="f-label">Password</label>
                     <input
                       className="f-input"
                       type="password"
@@ -301,20 +302,20 @@ export default function Layout({ children }) {
                     disabled={authLoading}
                   >
                     {authLoading
-                      ? "Traitement..."
+                      ? "Please wait..."
                       : authMode === "login"
-                      ? "Se connecter"
-                      : "S'inscrire"}
+                      ? "Sign In"
+                      : "Create Account"}
                   </button>
                   <div className="switch-mode">
-                    {authMode === "login" ? "Pas de compte ? " : "Déjà inscrit ? "}
+                    {authMode === "login" ? "New to Elite PC? " : "Already have an account? "}
                     <span
                       onClick={() => {
                         setAuthMode(authMode === "login" ? "register" : "login");
                         setAuthErr("");
                       }}
                     >
-                      {authMode === "login" ? "S'inscrire" : "Se connecter"}
+                      {authMode === "login" ? "Create Account" : "Sign In"}
                     </span>
                   </div>
                 </div>

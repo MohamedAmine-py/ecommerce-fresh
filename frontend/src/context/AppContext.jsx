@@ -82,7 +82,7 @@ export function AppProvider({ children }) {
     setFavorites(readFavorites(null));
     setUser(null); setToken(null);
     localStorage.removeItem("user"); localStorage.removeItem("token");
-    toast("Déconnecté avec succès");
+    toast("Signed out successfully");
   }, [token, toast]);
 
   const addToCart = useCallback((product) => {
@@ -94,7 +94,7 @@ export function AppProvider({ children }) {
       localStorage.setItem("cart", JSON.stringify(updated));
       return updated;
     });
-    toast(`${product.nom} ajouté au panier`);
+    toast(`${product.nom} added to cart`);
   }, [toast]);
 
   const removeFromCart = useCallback((id) => {
@@ -126,7 +126,7 @@ export function AppProvider({ children }) {
 
     setFavorites(updated);
     localStorage.setItem(favoriteStorageKey(user), JSON.stringify(updated));
-    toast(exists ? "Retiré des favoris" : "Ajouté aux favoris", "success");
+    toast(exists ? "Removed from favorites" : "Added to favorites", "success");
   }, [favorites, toast, user]);
 
   const cartCount = cart.reduce((s, i) => s + i.quantite, 0);

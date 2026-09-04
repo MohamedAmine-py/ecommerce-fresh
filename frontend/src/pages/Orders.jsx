@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import { getOrders } from "../api/client";
 import { useApp } from "../context/AppContext";
 import { StorefrontState } from "../components/StorefrontUI";
+import { formatCurrency } from "../utils/currency";
 
 const statusLabel = { en_cours: "In progress", validee: "Confirmed", annulee: "Cancelled" };
-const money = (value) => `${Number(value || 0).toFixed(2)} €`;
 
 export default function Orders() {
   const { user, token } = useApp();
@@ -37,7 +37,7 @@ export default function Orders() {
             <div className="order-list-id"><span>Order number</span><strong>#{String(order.id).padStart(6, "0")}</strong></div>
             <div><span>Placed</span><strong>{new Date(order.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}</strong></div>
             <div><span>Status</span><strong className={`order-status is-${order.statut}`}>{statusLabel[order.statut] || order.statut}</strong></div>
-            <div><span>Total</span><strong className="order-list-total">{money(order.total)}</strong></div>
+            <div><span>Total</span><strong className="order-list-total">{formatCurrency(order.total)}</strong></div>
             <Link className="button button-secondary order-view" to={`/orders/${order.id}`}>View Details</Link>
           </article>
         ))}</div>}
