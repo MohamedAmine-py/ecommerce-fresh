@@ -18,6 +18,7 @@ export async function apiCall(method, endpoint, body = null, token = null) {
 export const login = (data) => apiCall("POST", "/login", data);
 export const register = (data) => apiCall("POST", "/register", data);
 export const logout = (token) => apiCall("POST", "/logout", null, token);
+export const getCurrentUser = (token) => apiCall("GET", "/user", null, token);
 export const getProducts = () => apiCall("GET", "/products?per_page=50");
 export const getProduct = (id) => apiCall("GET", `/products/${id}`);
 export const getCategories = () => apiCall("GET", "/categories");

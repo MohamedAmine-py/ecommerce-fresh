@@ -15,7 +15,6 @@ const IconCart = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="non
 export default function Layout({ children }) {
   const {
     user,
-    token,
     cart,
     cartCount,
     cartTotal,
@@ -24,12 +23,10 @@ export default function Layout({ children }) {
     authOpen,
     setAuthOpen,
     toasts,
-    toast,
     handleLogin,
     handleLogout,
     updateCartItem,
     removeFromCart,
-    clearCart,
     addToCart,
     selectedProduct,
     setSelectedProduct
@@ -57,7 +54,7 @@ export default function Layout({ children }) {
       } else {
         setAuthErr(data.errors ? Object.values(data.errors).flat().join(" ") : data.message || "Something went wrong.");
       }
-    } catch (e) {
+    } catch {
       setAuthLoading(false);
       setAuthErr("Could not connect to the server.");
     }

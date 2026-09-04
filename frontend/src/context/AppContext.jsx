@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
-import { logout as apiLogout } from "../api/client";
+import { getCurrentUser, logout as apiLogout } from "../api/client";
 
 const AppContext = createContext();
 
@@ -54,6 +54,29 @@ export function AppProvider({ children }) {
     }
   }, [darkMode]);
 
+  useEffect(() => {
+    if (!token) return;
+
+    let active = true;
+    getCurrentUser(token)
+      .then((currentUser) => {
+        if (!active) return;
+        setUser(currentUser);
+        setFavorites(readFavorites(currentUser));
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      })
+      .catch(() => {
+        if (!active) return;
+        setUser(null);
+        setToken(null);
+        setFavorites(readFavorites(null));
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      });
+
+    return () => { active = false; };
+  }, [token]);
+
   const toast = useCallback((msg, type = "success") => {
     const id = `${Date.now()}-${++toastSequence.current}`;
     setToasts((t) => [...t, { id, msg, type }]);
@@ -74,7 +97,7 @@ export function AppProvider({ children }) {
     setUser(userData); setToken(userToken);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", userToken);
-    toast(`Bienvenue, ${userData.nom} !`);
+    toast(`Welcome, ${userData.nom}!`);
   }, [toast]);
 
   const handleLogout = useCallback(async () => {
@@ -146,4 +169,6 @@ export function AppProvider({ children }) {
   );
 }
 
+// AppProvider and its companion hook intentionally share this context module.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => useContext(AppContext);
