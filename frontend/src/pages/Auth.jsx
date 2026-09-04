@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { login, register } from "../api/client";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import BrandLogo from "../components/BrandLogo";
 
 function errorMessage(error) {

@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { getCurrentUser, logout as apiLogout } from "../api/client";
-
-const AppContext = createContext();
+import AppContext from "./app-context";
 
 const favoriteStorageKey = (user) => user?.id
   ? `elite-pc:favorites:user:${user.id}`
@@ -14,6 +13,18 @@ const readFavorites = (user) => {
   } catch {
     return [];
   }
+};
+
+const currentUserRequests = new Map();
+
+const validateCurrentUser = (token) => {
+  if (!currentUserRequests.has(token)) {
+    const request = getCurrentUser(token)
+      .finally(() => currentUserRequests.delete(token));
+    currentUserRequests.set(token, request);
+  }
+
+  return currentUserRequests.get(token);
 };
 
 export function AppProvider({ children }) {
@@ -58,15 +69,15 @@ export function AppProvider({ children }) {
     if (!token) return;
 
     let active = true;
-    getCurrentUser(token)
+    validateCurrentUser(token)
       .then((currentUser) => {
         if (!active) return;
         setUser(currentUser);
         setFavorites(readFavorites(currentUser));
         localStorage.setItem("user", JSON.stringify(currentUser));
       })
-      .catch(() => {
-        if (!active) return;
+      .catch((error) => {
+        if (!active || ![401, 419].includes(error.status)) return;
         setUser(null);
         setToken(null);
         setFavorites(readFavorites(null));
@@ -168,7 +179,3 @@ export function AppProvider({ children }) {
     </AppContext.Provider>
   );
 }
-
-// AppProvider and its companion hook intentionally share this context module.
-// eslint-disable-next-line react-refresh/only-export-components
-export const useApp = () => useContext(AppContext);

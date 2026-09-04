@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import BrandLogo from "./BrandLogo";
 
 // SVG Icons

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import { createOrder } from "../api/client";
 import { applyProductFallback, productImage } from "../utils/productAssets";
 import { formatCurrency } from "../utils/currency";

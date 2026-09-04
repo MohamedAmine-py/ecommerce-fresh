@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getProducts, getCategories } from "../api/client";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import ProductCard from "../components/ProductCard";
 import { ProductGridSkeleton, StorefrontState } from "../components/StorefrontUI";
 

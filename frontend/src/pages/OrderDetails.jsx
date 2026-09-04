@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { downloadInvoice, getOrder } from "../api/client";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import { StorefrontState } from "../components/StorefrontUI";
 import { applyProductFallback, productImage } from "../utils/productAssets";
 import { formatCurrency } from "../utils/currency";

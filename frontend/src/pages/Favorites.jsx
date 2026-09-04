@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import ProductCard from "../components/ProductCard";
 
 export default function Favorites() {

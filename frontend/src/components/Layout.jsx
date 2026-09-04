@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import SupportChat from "./SupportChat";

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getOrders } from "../api/client";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 import { StorefrontState } from "../components/StorefrontUI";
 import { formatCurrency } from "../utils/currency";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import AdminDashboard from "../components/AdminDashboard";
-import { useApp } from "../context/AppContext";
+import useApp from "../context/useApp";
 
 export default function Admin() {
   const { user, token, toast } = useApp();

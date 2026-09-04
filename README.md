@@ -72,3 +72,35 @@ npm run lint
 - Laravel API: `http://127.0.0.1:8000/api`
 
 Authentication, catalog, checkout, Admin, Elite AI, and invoice behavior remain owned by their existing applications under `frontend/` and `backend/`.
+
+## Docker Compose
+
+Docker runs the production frontend bundle with Nginx, the Laravel API with PHP 8.3 and Apache, and MySQL 8.4 with persistent named volumes.
+
+Optional configuration can be copied before startup:
+
+```bash
+cp .env.docker.example .env
+```
+
+The Compose defaults are sufficient for local development, so the stack can also be started directly:
+
+```bash
+docker compose up --build
+```
+
+Open:
+
+- Storefront: `http://localhost:3000`
+- Laravel API: `http://localhost:8000/api`
+- Laravel health endpoint: `http://localhost:8000/up`
+
+Laravel waits for MySQL and runs `php artisan migrate --force` whenever the backend container starts. Migrations are incremental and do not erase existing data. Seeding never runs automatically. To add the idempotent local demo catalog and accounts intentionally, run:
+
+```bash
+docker compose exec backend php artisan db:seed
+```
+
+MySQL data is retained in the `mysql_data` volume. The generated local Laravel application key is retained in `laravel_runtime` when `APP_KEY` is not explicitly configured. For shared environments, provide stable credentials and `APP_KEY` through a non-committed root `.env` file based on `.env.docker.example`.
+
+Elite AI requires a valid `GEMINI_API_KEY` in that root `.env`. The key is passed only to the backend container and is never built into the frontend image.
