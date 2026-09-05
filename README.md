@@ -1,43 +1,271 @@
 # ElitePC
 
-ElitePC is an API-backed ecommerce application for high-performance computers and PC components.
+ElitePC is a full-stack ecommerce application for browsing and ordering high-performance PCs, components, and peripherals. It combines a responsive React storefront, a Laravel REST API, inventory-aware order processing, an Admin workspace, PDF invoices, and a Gemini-powered catalog assistant.
 
-## Repository structure
+The repository is organized as a single project with independently runnable frontend and backend applications. Docker Compose is the recommended way to start the complete stack.
+
+## Features
+
+### Storefront
+
+- API-backed product catalog, categories, search, and product detail pages
+- Responsive product cards with stock, pricing, specifications, and image fallbacks
+- Guest cart with quantity controls and persistent browser storage
+- Favorites scoped locally to each authenticated user, with separate guest favorites
+- Checkout with delivery details, payment-method selection, and validation feedback
+- Customer registration, login, logout, and persisted Sanctum bearer-token sessions
+- Authenticated order history and customer-authorized order details
+- Downloadable, print-friendly PDF invoices
+- Dark and light themes with a shared ElitePC visual system
+- Responsive layouts for desktop, tablet, and mobile
+
+### Order and inventory safety
+
+- Prices are recalculated from current database values on the server
+- Product rows are locked during checkout to prevent concurrent overselling
+- Stock availability is validated before an order is created
+- Cancelling an order restores its stock once
+- Reactivating a cancelled order revalidates and deducts stock
+- Deleting an active order safely restores stock
+- Customers can access only their own orders and invoices
+
+### Administration
+
+- Role-protected Admin interface
+- Real dashboard KPIs for clients, products, orders, in-progress orders, and confirmed revenue
+- Product and category management
+- Order review and status management
+- User creation, editing, and safe deletion rules
+- Recent-order overview and inventory visibility
+
+### Elite AI
+
+- Gemini-backed PC hardware shopping assistant
+- Product questions, comparisons, recommendations, and compatibility guidance
+- Responses grounded in the live ElitePC catalog, including exact USD prices and stock
+- Bounded conversation history and model fallback handling
+- Backend-only Gemini credentials
+
+Elite AI does not access private customer information, track orders, place orders, or complete purchases.
+
+## Tech stack
+
+### Frontend
+
+- React 19
+- React Router 7
+- Vite 8
+- Plain CSS with semantic dark/light theme variables
+- ESLint 9
+
+### Backend
+
+- PHP 8.2+; the Docker image uses PHP 8.3 with Apache
+- Laravel 12
+- Laravel Sanctum bearer-token authentication
+- Eloquent ORM and database transactions
+- Dompdf for PDF invoices
+- Google Gemini PHP Laravel integration
+- PHPUnit 11
+- Laravel Pint
+
+### Data and infrastructure
+
+- MySQL 8.4 in Docker
+- MySQL or MariaDB for manual local development
+- Docker Compose
+- Nginx for the production frontend bundle and SPA routing
+- Named Docker volumes for MySQL data and the generated local Laravel application key
+
+## Project structure
 
 ```text
 ElitePC/
-|-- frontend/   React + Vite storefront and Admin interface
-|-- backend/    Laravel API, SQLite data, tests, and PDF invoices
-|-- .gitignore
-`-- README.md
+├── backend/
+│   ├── app/                    # Laravel models, controllers, requests, and services
+│   ├── config/                 # Laravel and integration configuration
+│   ├── database/               # Migrations, factories, and idempotent seeder
+│   ├── docker/                 # Apache virtual host and container entrypoint
+│   ├── resources/views/        # PDF invoice template
+│   ├── routes/                 # API and web routes
+│   ├── tests/                  # Laravel feature tests
+│   └── Dockerfile
+├── frontend/
+│   ├── public/                 # Local brand, category, and product assets
+│   ├── src/                    # React pages, components, context, API client, and styles
+│   ├── nginx.conf              # Static serving and React Router fallback
+│   └── Dockerfile
+├── .env.docker.example         # Root Docker Compose environment template
+├── docker-compose.yml
+└── README.md
 ```
 
-The frontend communicates with Laravel through `VITE_API_URL`; it does not depend on filesystem proximity between the two applications.
+## Prerequisites
 
-## Requirements
+### Docker setup
 
-- PHP 8.2 or newer
-- Composer
-- Node.js and npm
+- Git
+- Docker Desktop, or Docker Engine with Docker Compose v2
 
-SQLite remains the default local development database.
+### Manual setup
 
-## Backend setup
+- PHP 8.2 or newer with the extensions required by Laravel and PDO MySQL
+- Composer 2
+- Node.js compatible with Vite 8; Node.js 22 LTS is recommended and used by Docker
+- npm
+- MySQL or MariaDB
+
+## Quick start with Docker
+
+Clone the repository into an `ElitePC` directory:
+
+```bash
+git clone https://github.com/MohamedAmine-py/ecommerce-fresh.git ElitePC
+cd ElitePC
+```
+
+Copy the Docker environment template to the root `.env` file.
+
+PowerShell:
+
+```powershell
+Copy-Item .env.docker.example .env
+```
+
+macOS/Linux:
+
+```bash
+cp .env.docker.example .env
+```
+
+The included values are local-development defaults. Add a valid `GEMINI_API_KEY` if Elite AI is needed, and replace the database credentials before using the configuration in any shared environment.
+
+Build and start the stack:
+
+```bash
+docker compose up --build -d
+```
+
+Open:
+
+- Storefront: [http://localhost:3000](http://localhost:3000)
+- Laravel API: [http://localhost:8000/api](http://localhost:8000/api)
+- Backend health check: [http://localhost:8000/up](http://localhost:8000/up)
+
+The MySQL service is available only inside the Compose network. Laravel waits for MySQL and runs incremental `php artisan migrate --force` migrations when the backend starts. It never runs `migrate:fresh`, and seeding does not run automatically.
+
+MySQL data persists in the `mysql_data` volume. When no explicit `APP_KEY` is supplied, the generated local key persists in the `laravel_runtime` volume.
+
+Common lifecycle commands:
+
+```bash
+# Stop containers and preserve volumes
+docker compose down
+
+# Restart existing containers
+docker compose up -d
+
+# Rebuild after Docker, dependency, or frontend build-setting changes
+docker compose up --build -d
+```
+
+Avoid `docker compose down --volumes` when the Docker database must be preserved.
+
+## Environment configuration
+
+Environment files can contain credentials and must not be committed. The committed example files contain development placeholders only.
+
+### Root `.env` — Docker Compose
+
+Create this file from `.env.docker.example`.
+
+- `MYSQL_DATABASE`: database created by the MySQL container
+- `MYSQL_USER`: application database user
+- `MYSQL_PASSWORD`: application database password
+- `MYSQL_ROOT_PASSWORD`: MySQL root password
+- `APP_KEY`: optional explicit Laravel key; when empty, Docker generates and persists one locally
+- `APP_ENV`: Laravel environment, default `local`
+- `APP_DEBUG`: Laravel debug output, default `false` in Docker
+- `BACKEND_URL`: public Laravel URL, default `http://localhost:8000`
+- `BACKEND_PORT`: published backend port, default `8000`
+- `FRONTEND_PORT`: published frontend port, default `3000`
+- `CORS_ALLOWED_ORIGINS`: comma-separated permitted browser origins
+- `VITE_API_URL`: browser-reachable API base URL, default `http://localhost:8000/api`
+- `GEMINI_API_KEY`: private server-side Gemini key
+- `GEMINI_REQUEST_TIMEOUT`: Gemini request timeout in seconds
+- `LOG_LEVEL`: Laravel log level
+
+Example placeholder:
+
+```dotenv
+GEMINI_API_KEY=your_key_here
+```
+
+Never prefix or duplicate this key as a Vite variable. Vite variables are embedded in the browser bundle.
+
+### `backend/.env` — manual Laravel development
+
+Create this file from `backend/.env.example`. Relevant settings include:
+
+- Laravel application settings: `APP_NAME`, `APP_ENV`, `APP_KEY`, `APP_DEBUG`, `APP_URL`
+- Database connection: `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+- Browser access: `CORS_ALLOWED_ORIGINS`
+- Sessions, cache, queue, mail, filesystem, and logging settings provided by Laravel
+- `GEMINI_API_KEY` for Elite AI
+- `SEED_ADMIN_NAME`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD`
+- `SEED_CLIENT_NAME`, `SEED_CLIENT_EMAIL`, `SEED_CLIENT_PASSWORD`
+
+For MySQL local development, replace the example SQLite setting with your own local connection:
+
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=elitepc
+DB_USERNAME=your_local_user
+DB_PASSWORD=your_local_password
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+GEMINI_API_KEY=your_key_here
+```
+
+### `frontend/.env` — manual Vite development
+
+Create this file from `frontend/.env.example`:
+
+```dotenv
+VITE_API_URL=http://127.0.0.1:8000/api
+```
+
+This URL is consumed by the browser and must point to a host reachable from the browser, not to an internal Docker service name.
+
+## Manual local development
+
+### Backend
+
+From the repository root:
 
 ```bash
 cd backend
 composer install
+```
+
+Create the local environment file:
+
+```bash
 cp .env.example .env
+```
+
+On PowerShell, use `Copy-Item .env.example .env` instead. Configure the MySQL or MariaDB variables described above, create the named empty database, then run:
+
+```bash
 php artisan key:generate
 php artisan migrate
 php artisan serve
 ```
 
-For an existing local checkout, preserve `backend/.env` and `backend/database/database.sqlite`. Do not run destructive migrations when retaining development data.
+The API is available at `http://127.0.0.1:8000/api` by default.
 
-The Gemini integration reads its API key and model configuration from the backend environment. Never commit the real `.env` file or API keys.
-
-## Frontend setup
+### Frontend
 
 In a second terminal:
 
@@ -48,59 +276,181 @@ cp .env.example .env
 npm run dev
 ```
 
-The supplied frontend environment example points `VITE_API_URL` to `http://127.0.0.1:8000/api`.
+On PowerShell, use `Copy-Item .env.example .env`. The Vite development server is normally available at `http://localhost:5173`.
 
-## Verification
+## Database and seed data
 
-From `backend/`:
+The Docker stack uses MySQL 8.4. Manual development can use MySQL or MariaDB through Laravel's `mysql` driver.
+
+Schema changes are managed by Laravel migrations:
 
 ```bash
-php artisan about
+cd backend
+php artisan migrate
+```
+
+The optional seeder creates an idempotent development catalog and local demo accounts. Repeated runs do not duplicate its natural catalog identities, and existing product stock is not reset.
+
+Run it only when demo data is wanted:
+
+```bash
+# Docker
+docker compose exec backend php artisan db:seed
+
+# Manual backend
+php artisan db:seed
+```
+
+Do not use `migrate:fresh` on a database containing data that must be retained.
+
+## Local demo accounts
+
+`DatabaseSeeder` creates these accounts only when Laravel runs in the `local` or `testing` environment:
+
+- Admin: `admin@ecommerce.test` / `admin123`
+- Customer: `client@ecommerce.test` / `client123`
+
+They are development-only defaults from `backend/.env.example`. Change the `SEED_*` values when needed, never use these credentials in production, and do not run local demo seeding in a production environment.
+
+## API overview
+
+All endpoints are prefixed with `/api`.
+
+### Public
+
+- `POST /register` — create a customer account
+- `POST /login` — authenticate and issue a Sanctum bearer token
+- `GET /products` — list products
+- `GET /products/{id}` — retrieve a product
+- `GET /categories` — list categories
+- `POST /support/chat` — submit a bounded-history Elite AI message
+
+### Authenticated
+
+Send `Authorization: Bearer <token>`.
+
+- `GET /user` — current user
+- `POST /logout` — revoke the current token
+- `GET /orders` — current customer's orders; Admin receives all orders
+- `POST /orders` — create an order
+- `GET /orders/{id}` — authorized order details
+- `GET /orders/{id}/invoice` — authorized PDF invoice download
+
+### Admin only
+
+These routes require both Sanctum authentication and the Admin role.
+
+- `POST /products` — create a product
+- `PUT /products/{id}` — update a product
+- `DELETE /products/{id}` — safely delete a product
+- `POST /categories` — create a category
+- `PUT /categories/{id}` — update a category
+- `DELETE /categories/{id}` — safely delete a category
+- `PATCH /orders/{id}/status` — update order status
+- `DELETE /orders/{id}` — safely delete an order
+- `GET /admin/stats` — dashboard statistics and recent orders
+- `GET|POST /admin/users` — list or create users
+- `PUT|DELETE /admin/users/{id}` — update or safely delete a user
+
+The exact request fields and validation rules remain defined by Laravel request classes and controllers.
+
+## Testing and quality checks
+
+Backend feature tests cover authentication and authorization, login rate limiting, order creation and inventory safety, invoice rendering, idempotent seeding, catalog currency grounding, AI history limits, and safe Admin deletion behavior.
+
+```bash
+cd backend
 php artisan test
 ```
 
-From `frontend/`:
+Format backend PHP with Laravel Pint:
 
 ```bash
-npm run build
+cd backend
+./vendor/bin/pint
+```
+
+On Windows PowerShell, `vendor/bin/pint` can be used when the shell resolves the PHP executable.
+
+Frontend checks:
+
+```bash
+cd frontend
 npm run lint
+npm run build
 ```
 
-## Local URLs
+The repository currently does not include a browser end-to-end test suite.
 
-- Storefront: `http://127.0.0.1:5173`
-- Laravel API: `http://127.0.0.1:8000/api`
+## Docker troubleshooting
 
-Authentication, catalog, checkout, Admin, Elite AI, and invoice behavior remain owned by their existing applications under `frontend/` and `backend/`.
-
-## Docker Compose
-
-Docker runs the production frontend bundle with Nginx, the Laravel API with PHP 8.3 and Apache, and MySQL 8.4 with persistent named volumes.
-
-Optional configuration can be copied before startup:
+Check container health and published ports:
 
 ```bash
-cp .env.docker.example .env
+docker compose ps
 ```
 
-The Compose defaults are sufficient for local development, so the stack can also be started directly:
+Inspect service logs:
 
 ```bash
-docker compose up --build
+docker compose logs backend
+docker compose logs frontend
+docker compose logs mysql
 ```
 
-Open:
-
-- Storefront: `http://localhost:3000`
-- Laravel API: `http://localhost:8000/api`
-- Laravel health endpoint: `http://localhost:8000/up`
-
-Laravel waits for MySQL and runs `php artisan migrate --force` whenever the backend container starts. Migrations are incremental and do not erase existing data. Seeding never runs automatically. To add the idempotent local demo catalog and accounts intentionally, run:
+Check the backend directly:
 
 ```bash
-docker compose exec backend php artisan db:seed
+curl http://localhost:8000/up
+curl http://localhost:8000/api/products
 ```
 
-MySQL data is retained in the `mysql_data` volume. The generated local Laravel application key is retained in `laravel_runtime` when `APP_KEY` is not explicitly configured. For shared environments, provide stable credentials and `APP_KEY` through a non-committed root `.env` file based on `.env.docker.example`.
+If dependencies, Dockerfiles, Nginx configuration, `VITE_API_URL`, or another frontend build variable changes, rebuild the containers:
 
-Elite AI requires a valid `GEMINI_API_KEY` in that root `.env`. The key is passed only to the backend container and is never built into the frontend image.
+```bash
+docker compose up --build -d
+```
+
+Nginx is configured to serve React Router URLs through `index.html`, including direct refreshes of `/products`, `/orders`, and nested product/order routes. If routing behavior appears stale, confirm the frontend image was rebuilt.
+
+Changes to runtime backend variables normally require container recreation. Changes to `VITE_API_URL` require rebuilding the frontend because Vite embeds the value during compilation.
+
+## Security notes
+
+- Keep root, backend, and frontend `.env` files out of version control.
+- Keep `GEMINI_API_KEY` server-side; never expose it through `VITE_*` variables.
+- Public registration always creates a customer account and does not accept an Admin role.
+- Admin endpoints are protected by Sanctum and role middleware.
+- Login and Elite AI endpoints are rate-limited.
+- Order totals use server-side database prices rather than client-submitted prices.
+- Stock validation and mutation use transactions and row locks.
+- Customer order and invoice access is ownership-checked by the backend.
+
+These controls reduce common risks but do not replace environment-specific production hardening, HTTPS, secure secret management, monitoring, backups, and dependency maintenance.
+
+## Screenshots
+
+Add final portfolio screenshots here when available:
+
+- Home
+- Products
+- Product details
+- Cart and Checkout
+- Elite AI
+- Admin dashboard
+
+## Project status
+
+ElitePC is a finished full-stack portfolio application with a complete storefront, order workflow, Admin management, Docker Compose environment, and catalog-grounded AI assistant.
+
+Current operational boundaries:
+
+- Elite AI depends on Gemini API availability, credentials, and quota.
+- No external payment gateway is integrated; checkout records the supported payment-method field only.
+- Favorites persist per browser and account identity but are not synchronized through a backend favorites API.
+- The Contact form is currently a non-submitting presentation placeholder.
+- The repository does not include production hosting configuration or browser end-to-end tests.
+
+## Author
+
+Mohamed Amine
