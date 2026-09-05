@@ -120,7 +120,7 @@ ElitePC/
 Clone the repository into an `ElitePC` directory:
 
 ```bash
-git clone https://github.com/MohamedAmine-py/ecommerce-fresh.git ElitePC
+git clone https://github.com/MohamedAmine-py/ElitePC.git
 cd ElitePC
 ```
 
